@@ -4,14 +4,28 @@ import SwiftUI
 
 struct EmojiArtMainView: View {
     @StateObject private var viewModel = EmojiArtViewModel()
+    @State private var selection = Set<UUID>()
 
     var body: some View {
         VStack(spacing: 0) {
             GeometryReader { geo in
                 ZStack {
                     Color.white.ignoresSafeArea()
+                        .contentShape(Rectangle())
+                        .onTapGesture { selection.removeAll() }
+
                     ForEach(viewModel.canvas.emojis) { e in
-                        Text(e.text).font(.system(size: e.size))
+                        let isSelected = selection.contains(e.id)
+                        Text(e.text)
+                            .font(.system(size: e.size))
+                            .padding(2)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 4)
+                                    .stroke(
+                                        isSelected ? Color.blue : .clear,
+                                        lineWidth: 2
+                                    )
+                            )
                             .position(
                                 CanvasGeometry
                                     .viewPoint(
@@ -21,6 +35,13 @@ struct EmojiArtMainView: View {
                                         canvasSize: geo.size
                                     )
                             )
+                            .onTapGesture {
+                                if isSelected {
+                                    selection.remove(e.id)
+                                } else {
+                                    selection.insert(e.id)
+                                }
+                            }
                     }
                 }
             }
