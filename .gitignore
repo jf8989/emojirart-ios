@@ -1,0 +1,47 @@
+# Xcode
+DerivedData/
+build/
+*.xcworkspace
+*.xccheckout
+*.xcuserstate
+*.xcscmblueprint
+*.xcuserdata/
+*.xcodeproj/project.xcworkspace/
+!default.xcworkspace/contents.xcworkspacedata
+
+# Swift Package Manager
+Packages/
+Package.pins
+Package.resolved
+.build/
+
+# CocoaPods
+Pods/
+Podfile.lock
+
+# Carthage
+Carthage/Build/
+
+# Fastlane
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots/**/*.png
+fastlane/test_output
+
+# Output and temp files
+*.moved-aside
+*.hmap
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+# Playgrounds
+timeline.xctimeline
+playground.xcworkspace
+
+# User-specific
+*.swp
+*~
+.DS_Store
+*.idea/
+*.vscode/
