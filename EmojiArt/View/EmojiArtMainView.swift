@@ -4,7 +4,7 @@ import SwiftUI
 
 struct EmojiArtMainView: View {
     @StateObject private var viewModel = EmojiArtViewModel()
-    @State private var selection = Set<UUID>()
+    @StateObject private var selectionViewModel = SelectionViewModel()
 
     var body: some View {
         VStack(spacing: 0) {
@@ -12,10 +12,10 @@ struct EmojiArtMainView: View {
                 ZStack {
                     Color.white.ignoresSafeArea()
                         .contentShape(Rectangle())
-                        .onTapGesture { selection.removeAll() }
+                        .onTapGesture { selectionViewModel.clear() }
 
                     ForEach(viewModel.canvas.emojis) { e in
-                        let isSelected = selection.contains(e.id)
+                        let isSelected = selectionViewModel.contains(e.id)
                         Text(e.text)
                             .font(.system(size: e.size))
                             .padding(2)
@@ -36,11 +36,7 @@ struct EmojiArtMainView: View {
                                     )
                             )
                             .onTapGesture {
-                                if isSelected {
-                                    selection.remove(e.id)
-                                } else {
-                                    selection.insert(e.id)
-                                }
+                                selectionViewModel.toggle(e.id)
                             }
                     }
                 }
