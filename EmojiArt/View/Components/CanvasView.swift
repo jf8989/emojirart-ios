@@ -1,4 +1,4 @@
-// View/Components/EmojiCanvasView.swift
+// View/Components/CanvasView.swift
 
 import SwiftUI
 

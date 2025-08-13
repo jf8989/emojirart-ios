@@ -7,7 +7,7 @@ struct EmojiArtMainView: View {
     @StateObject private var selectionViewModel = SelectionViewModel()
 
     var body: some View {
-        EmojiCanvasView(
+        CanvasView(
             selectionViewModel: selectionViewModel,
             emojis: viewModel.canvas.emojis,
             pan: .zero,
