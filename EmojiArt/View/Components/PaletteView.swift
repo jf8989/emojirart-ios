@@ -7,6 +7,10 @@ struct PaletteView: View {
     let onPick: (String) -> Void
 
     var body: some View {
+        emojiView
+    }
+    
+    var emojiView: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack {
                 ForEach(Array(palette), id: \.self) { ch in
