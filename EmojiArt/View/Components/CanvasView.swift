@@ -2,7 +2,7 @@
 
 import SwiftUI
 
-struct EmojiCanvasView: View {
+struct CanvasView: View {
     @ObservedObject var selectionViewModel: SelectionViewModel
 
     let emojis: [Emoji]
