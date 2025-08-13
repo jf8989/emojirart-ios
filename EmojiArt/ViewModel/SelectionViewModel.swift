@@ -1,6 +1,5 @@
 // ViewModel/SelectionViewModel.swift
 
-import Combine
 import Foundation
 
 final class SelectionViewModel: ObservableObject {

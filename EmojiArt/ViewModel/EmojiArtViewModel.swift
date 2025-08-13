@@ -8,7 +8,8 @@ final class EmojiArtViewModel: ObservableObject {
     // MARK: - Intent Methods
 
     func addEmoji(_ text: String, at modelPoint: CGPoint, size: CGFloat = 40) {
-        canvas.emojis.append(
+        /// Appends an emoji struct to the array for visualization
+        canvas.emojiGroup.append(
             .init(
                 id: UUID(),
                 text: text,
@@ -19,19 +20,19 @@ final class EmojiArtViewModel: ObservableObject {
     }
 
     func remove(_ ids: Set<UUID>) {
-        canvas.emojis.removeAll { ids.contains($0.id) }
+        canvas.emojiGroup.removeAll { ids.contains($0.id) }
     }
 
     func move(_ ids: Set<UUID>, by modelDelta: CGSize) {
-        for i in canvas.emojis.indices where ids.contains(canvas.emojis[i].id) {
-            canvas.emojis[i].position.x += modelDelta.width
-            canvas.emojis[i].position.y += modelDelta.height
+        for i in canvas.emojiGroup.indices where ids.contains(canvas.emojiGroup[i].id) {
+            canvas.emojiGroup[i].position.x += modelDelta.width
+            canvas.emojiGroup[i].position.y += modelDelta.height
         }
     }
 
     func scale(_ ids: Set<UUID>, by factor: CGFloat) {
-        for i in canvas.emojis.indices where ids.contains(canvas.emojis[i].id) {
-            canvas.emojis[i].size *= factor
+        for i in canvas.emojiGroup.indices where ids.contains(canvas.emojiGroup[i].id) {
+            canvas.emojiGroup[i].size *= factor
         }
     }
 

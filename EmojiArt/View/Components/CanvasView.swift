@@ -7,22 +7,23 @@ struct CanvasView: View {
     // MARK: - Inputs
 
     @ObservedObject var selectionViewModel: SelectionViewModel
-    let emojis: [Emoji]
+    let emojiGroup: [Emoji]
     let pan: CGSize
     let zoom: CGFloat
 
     // MARK: - Body View
 
     var body: some View {
-        emojiInPlaceView
+        canvasPlayground
     }
 
-    var emojiInPlaceView: some View {
+    var canvasPlayground: some View {
         GeometryReader { geo in
             ZStack {
 
                 // MARK: - Background Layer
 
+                /// Builds the white background
                 Color.white.ignoresSafeArea()
                     .contentShape(Rectangle())
                     /// Background tap
@@ -33,15 +34,15 @@ struct CanvasView: View {
                 // MARK: - Emoji Layer
 
                 /// Only those with a diff get redrawn
-                ForEach(emojis) { e in
-                    let isSelected = selectionViewModel.contains(e.id)
+                ForEach(emojiGroup) { e in
+                    let showSelectionChrome = selectionViewModel.contains(e.id)
                     Text(e.text)
                         .font(.system(size: e.size))
                         .padding(2)
                         .overlay(
                             RoundedRectangle(cornerRadius: 4)
                                 .stroke(
-                                    isSelected ? Color.blue : .clear,
+                                    showSelectionChrome ? Color.blue : .clear,
                                     lineWidth: 2
                                 )
                         )

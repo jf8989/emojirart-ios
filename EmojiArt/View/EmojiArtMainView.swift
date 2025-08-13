@@ -11,7 +11,7 @@ struct EmojiArtMainView: View {
     var body: some View {
         CanvasView(
             selectionViewModel: selectionViewModel,
-            emojis: viewModel.canvas.emojis,
+            emojiGroup: viewModel.canvas.emojiGroup,
             pan: .zero,
             zoom: 1
         )
@@ -22,8 +22,9 @@ struct EmojiArtMainView: View {
     // MARK: - Sub.Views
 
     var paletteView: some View {
-        PaletteView { picked in
-            viewModel.addEmoji(picked, at: .zero)/// center
+        /// Appends any selected emoji to the canvas
+        PaletteView { pickedEmoji in
+            viewModel.addEmoji(pickedEmoji, at: .zero)
         }
     }
 }
