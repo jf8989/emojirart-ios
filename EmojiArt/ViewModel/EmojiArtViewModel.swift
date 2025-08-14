@@ -35,5 +35,10 @@ final class EmojiArtViewModel: ObservableObject {
             canvas.emojiGroup[i].size *= factor
         }
     }
-
+    
+    // MARK: - Reset
+    func resetCanvas() {
+        // Clears all emojis from the canvas (does not affect UI-only pan/zoom)
+        canvas.emojiGroup.removeAll()
+    }
 }
