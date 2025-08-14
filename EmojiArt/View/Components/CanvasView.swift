@@ -10,13 +10,15 @@ struct CanvasView: View {
     @ObservedObject var canvasUI: CanvasUIState
     let emojiGroup: [Emoji]
     let onMoveSelectionBy: (_ ids: Set<UUID>, _ modelDelta: CGSize) -> Void
+    let onScaleSelectionBy: (_ ids: Set<UUID>, _ factor: CGFloat) -> Void
 
     // MARK: - Gesture State
 
-    @GestureState private var panDragViewOffset: CGSize = .zero
     /// view-space delta during background pan
-    @GestureState private var emojiDragViewOffset: CGSize = .zero
+    @GestureState private var panDragViewOffset: CGSize = .zero
     /// view-space delta during emoji drag
+    @GestureState private var emojiDragViewOffset: CGSize = .zero
+    @GestureState private var pinchScale: CGFloat = 1
 
     // MARK: - Body View
 
@@ -49,6 +51,16 @@ struct CanvasView: View {
                     Text(e.text)
                         .font(.system(size: e.size))
                         .padding(2)
+                        /// Live scale for selected emojis when pinching with a selection
+                        .scaleEffect(
+                            /// Base = document zoom (live during no-selection pinch, persisted otherwise)
+                            (selectionViewModel.ids.isEmpty
+                                ? currentZoom : canvasUI.zoom)
+                                /// If selecting, multipply ONLY selected glyphs by live pinch
+                                * (showSelectionChrome
+                                    && !selectionViewModel.ids.isEmpty
+                                    ? pinchScale : 1)
+                        )
                         .overlay(
                             RoundedRectangle(cornerRadius: 4)
                                 .stroke(
@@ -65,7 +77,9 @@ struct CanvasView: View {
                                 .viewPoint(
                                     fromModel: e.position,
                                     pan: currentPan,
-                                    zoom: canvasUI.zoom,
+                                    /// zoom doc live only when NO selection is made (selection path scales glyphs instead)
+                                    zoom: selectionViewModel.ids.isEmpty
+                                        ? currentZoom : canvasUI.zoom,
                                     canvasSize: geo.size
                                 )
                         )
@@ -76,7 +90,8 @@ struct CanvasView: View {
                         .gesture(showSelectionChrome ? emojiDragGesture : nil)
                 }
             }
-        }
+        }/// All pinches recognized on the document; branch by selection
+            .gesture(magnifyGesture)
     }
 
     // MARK: - Derived pan (persisted + in-flight)
@@ -87,6 +102,8 @@ struct CanvasView: View {
             height: canvasUI.pan.height + panDragViewOffset.height
         )
     }
+
+    private var currentZoom: CGFloat { canvasUI.zoom * pinchScale }
 
     // MARK: - Gestures
 
@@ -112,6 +129,23 @@ struct CanvasView: View {
                     zoom: canvasUI.zoom
                 )
                 onMoveSelectionBy(selectionViewModel.ids, modelDelta)
+            }
+    }
+
+    private var magnifyGesture: some Gesture {
+        MagnificationGesture()
+            .updating($pinchScale) { value, state, _ in
+                state = value
+            }
+            .onEnded { final in
+                if selectionViewModel.ids.isEmpty {
+                    /// commit document zoom; clamp to sane range
+                    let clamped = min(max(canvasUI.zoom * final, 0.25), 8.0)
+                    canvasUI.zoom = clamped
+                } else {
+                    /// commit selection scale to model sizes
+                    onScaleSelectionBy(selectionViewModel.ids, final)
+                }
             }
     }
 

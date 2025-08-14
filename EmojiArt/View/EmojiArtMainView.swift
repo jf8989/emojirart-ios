@@ -18,6 +18,10 @@ struct EmojiArtMainView: View {
                 emojiGroup: viewModel.canvas.emojiGroup,
                 onMoveSelectionBy: { ids, modelDelta in
                     viewModel.move(ids, by: modelDelta)
+                },
+                onScaleSelectionBy: {
+                    ids,
+                    factor in viewModel.scale(ids, by: factor)
                 }
             )
             Divider()
