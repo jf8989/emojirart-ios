@@ -34,7 +34,8 @@ final class EmojiArtViewModel: ObservableObject {
     func scale(_ ids: Set<UUID>, by factor: CGFloat) {
         for i in canvas.emojiGroup.indices
         where ids.contains(canvas.emojiGroup[i].id) {
-            canvas.emojiGroup[i].size *= factor
+            canvas.emojiGroup[i].size = (canvas.emojiGroup[i].size * factor)
+                .clamped(to: 30...512)
         }
     }
 

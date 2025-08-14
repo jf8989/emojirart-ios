@@ -55,6 +55,10 @@ struct CanvasView: View {
                         (emojiDragViewOffset != .zero)
                         || (abs(pinchScale - 1) > 0.001)
 
+                    let minRenderedSize: CGFloat = 30
+                    let docScale = selectionViewModel.ids.isEmpty ? currentZoom : canvasUI.zoom
+                    let livePinchForSelection: CGFloat = (showSelectionChrome && !selectionViewModel.ids.isEmpty) ? max(1, minRenderedSize / (e.size * docScale)) : 1
+
                     Text(e.text)
                         .accessibilityLabel(Text(e.text))
                         .accessibilityHint(
@@ -76,15 +80,7 @@ struct CanvasView: View {
                         )
                         .animation(nil, value: isInteracting)
                         /// Live scale for selected emojis when pinching with a selection
-                        .scaleEffect(
-                            /// Base = document zoom (live during no-selection pinch, persisted otherwise)
-                            (selectionViewModel.ids.isEmpty
-                                ? currentZoom : canvasUI.zoom)
-                                /// If selecting, multiply ONLY selected glyphs by live pinch
-                                * (showSelectionChrome
-                                    && !selectionViewModel.ids.isEmpty
-                                    ? pinchScale : 1)
-                        )
+                        .scaleEffect(docScale * livePinchForSelection)
                         /// live offset while dragging selection
                         .offset(
                             showSelectionChrome
