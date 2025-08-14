@@ -50,6 +50,9 @@ struct CanvasView: View {
                 /// Only those with a diff get redrawn
                 ForEach(emojiGroup) { e in
                     let showSelectionChrome = selectionViewModel.contains(e.id)
+                    let isInteracting =
+                        (emojiDragViewOffset != .zero)
+                        || (abs(pinchScale - 1) > 0.001)
                     Text(e.text)
                         .font(.system(size: e.size))
                         .padding(2)
@@ -59,7 +62,12 @@ struct CanvasView: View {
                                     showSelectionChrome ? Color.blue : .clear,
                                     lineWidth: 2
                                 )
+                                .opacity(
+                                    showSelectionChrome && !isInteracting
+                                        ? 1 : 0
+                                )
                         )
+                        .animation(nil, value: isInteracting)
                         /// Live scale for selected emojis when pinching with a selection
                         .scaleEffect(
                             /// Base = document zoom (live during no-selection pinch, persisted otherwise)
@@ -74,6 +82,7 @@ struct CanvasView: View {
                         .offset(
                             showSelectionChrome ? emojiDragViewOffset : .zero
                         )
+                        .zIndex(showSelectionChrome ? 1 : 0)
                         .position(
                             CanvasGeometry
                                 .viewPoint(
