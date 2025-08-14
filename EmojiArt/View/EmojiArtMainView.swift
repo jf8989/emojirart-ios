@@ -11,16 +11,18 @@ struct EmojiArtMainView: View {
     // MARK: - Body View
 
     var body: some View {
-        CanvasView(
-            selectionViewModel: selectionViewModel,
-            canvasUI: canvasUI,
-            emojiGroup: viewModel.canvas.emojiGroup,
-            onMoveSelectionBy: { ids, modelDelta in
-                viewModel.move(ids, by: modelDelta)
-            }
-        )
-        Divider()
-        paletteView
+        VStack(spacing: 0) {
+            CanvasView(
+                selectionViewModel: selectionViewModel,
+                canvasUI: canvasUI,
+                emojiGroup: viewModel.canvas.emojiGroup,
+                onMoveSelectionBy: { ids, modelDelta in
+                    viewModel.move(ids, by: modelDelta)
+                }
+            )
+            Divider()
+            paletteView
+        }
     }
 
     // MARK: - Sub.Views

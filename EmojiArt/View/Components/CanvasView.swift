@@ -73,6 +73,7 @@ struct CanvasView: View {
                         .onTapGesture {
                             selectionViewModel.toggle(e.id)
                         }
+                        .gesture(showSelectionChrome ? emojiDragGesture : nil)
                 }
             }
         }
