@@ -5,15 +5,19 @@ import SwiftUI
 struct EmojiArtMainView: View {
     @StateObject private var viewModel = EmojiArtViewModel()
     @StateObject private var selectionViewModel = SelectionViewModel()
+    @StateObject private var canvasUI = CanvasUIState()
+    /// pan / zoom
 
     // MARK: - Body View
 
     var body: some View {
         CanvasView(
             selectionViewModel: selectionViewModel,
+            canvasUI: canvasUI,
             emojiGroup: viewModel.canvas.emojiGroup,
-            pan: .zero,
-            zoom: 1
+            onMoveSelectionBy: { ids, modelDelta in
+                viewModel.move(ids, by: modelDelta)
+            }
         )
         Divider()
         paletteView

@@ -7,9 +7,16 @@ struct CanvasView: View {
     // MARK: - Inputs
 
     @ObservedObject var selectionViewModel: SelectionViewModel
+    @ObservedObject var canvasUI: CanvasUIState
     let emojiGroup: [Emoji]
-    let pan: CGSize
-    let zoom: CGFloat
+    let onMoveSelectionBy: (_ ids: Set<UUID>, _ modelDelta: CGSize) -> Void
+
+    // MARK: - Gesture State
+
+    @GestureState private var panDragViewOffset: CGSize = .zero
+    /// view-space delta during background pan
+    @GestureState private var emojiDragViewOffset: CGSize = .zero
+    /// view-space delta during emoji drag
 
     // MARK: - Body View
 
@@ -26,10 +33,13 @@ struct CanvasView: View {
                 /// Builds the white background
                 Color.white.ignoresSafeArea()
                     .contentShape(Rectangle())
-                    /// Background tap
-                    .onTapGesture {
-                        selectionViewModel.clear()
-                    }
+                    /// Background tap clears selection
+                    .onTapGesture { selectionViewModel.clear() }
+                    /// Background drag pans the document ONLY when nothing is selected
+                    .gesture(
+                        selectionViewModel.ids.isEmpty
+                            ? backgroundPanGesture : nil
+                    )
 
                 // MARK: - Emoji Layer
 
@@ -46,12 +56,16 @@ struct CanvasView: View {
                                     lineWidth: 2
                                 )
                         )
+                        /// live offset while dragging selection
+                        .offset(
+                            showSelectionChrome ? emojiDragViewOffset : .zero
+                        )
                         .position(
                             CanvasGeometry
                                 .viewPoint(
                                     fromModel: e.position,
-                                    pan: pan,
-                                    zoom: zoom,
+                                    pan: currentPan,
+                                    zoom: canvasUI.zoom,
                                     canvasSize: geo.size
                                 )
                         )
@@ -63,4 +77,41 @@ struct CanvasView: View {
             }
         }
     }
+
+    // MARK: - Derived pan (persisted + in-flight)
+
+    private var currentPan: CGSize {
+        .init(
+            width: canvasUI.pan.width + panDragViewOffset.width,
+            height: canvasUI.pan.height + panDragViewOffset.height
+        )
+    }
+
+    // MARK: - Gestures
+
+    private var backgroundPanGesture: some Gesture {
+        DragGesture()
+            .updating($panDragViewOffset) { value, state, _ in
+                state = value.translation
+            }
+            .onEnded { value in
+                canvasUI.pan.width += value.translation.width
+                canvasUI.pan.height += value.translation.height
+            }
+    }
+
+    private var emojiDragGesture: some Gesture {
+        DragGesture()
+            .updating($emojiDragViewOffset) { value, state, _ in
+                state = value.translation
+            }
+            .onEnded { value in
+                let modelDelta = CanvasGeometry.modelDelta(
+                    fromViewDelta: value.translation,
+                    zoom: canvasUI.zoom
+                )
+                onMoveSelectionBy(selectionViewModel.ids, modelDelta)
+            }
+    }
+
 }
