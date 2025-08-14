@@ -51,6 +51,13 @@ struct CanvasView: View {
                     Text(e.text)
                         .font(.system(size: e.size))
                         .padding(2)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 4)
+                                .stroke(
+                                    showSelectionChrome ? Color.blue : .clear,
+                                    lineWidth: 2
+                                )
+                        )
                         /// Live scale for selected emojis when pinching with a selection
                         .scaleEffect(
                             /// Base = document zoom (live during no-selection pinch, persisted otherwise)
@@ -60,13 +67,6 @@ struct CanvasView: View {
                                 * (showSelectionChrome
                                     && !selectionViewModel.ids.isEmpty
                                     ? pinchScale : 1)
-                        )
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 4)
-                                .stroke(
-                                    showSelectionChrome ? Color.blue : .clear,
-                                    lineWidth: 2
-                                )
                         )
                         /// live offset while dragging selection
                         .offset(
