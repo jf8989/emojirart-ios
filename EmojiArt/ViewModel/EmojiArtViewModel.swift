@@ -24,19 +24,22 @@ final class EmojiArtViewModel: ObservableObject {
     }
 
     func move(_ ids: Set<UUID>, by modelDelta: CGSize) {
-        for i in canvas.emojiGroup.indices where ids.contains(canvas.emojiGroup[i].id) {
+        for i in canvas.emojiGroup.indices
+        where ids.contains(canvas.emojiGroup[i].id) {
             canvas.emojiGroup[i].position.x += modelDelta.width
             canvas.emojiGroup[i].position.y += modelDelta.height
         }
     }
 
     func scale(_ ids: Set<UUID>, by factor: CGFloat) {
-        for i in canvas.emojiGroup.indices where ids.contains(canvas.emojiGroup[i].id) {
+        for i in canvas.emojiGroup.indices
+        where ids.contains(canvas.emojiGroup[i].id) {
             canvas.emojiGroup[i].size *= factor
         }
     }
-    
+
     // MARK: - Reset
+
     func resetCanvas() {
         // Clears all emojis from the canvas (does not affect UI-only pan/zoom)
         canvas.emojiGroup.removeAll()

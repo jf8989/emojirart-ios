@@ -9,6 +9,7 @@ struct CanvasView: View {
     @ObservedObject var selectionViewModel: SelectionViewModel
     @ObservedObject var canvasUI: CanvasUIState
     @State private var showDeleteConfirm: Bool = false
+    @State private var didDelete = false
     let emojiGroup: [Emoji]
     let onMoveSelectionBy: (_ ids: Set<UUID>, _ modelDelta: CGSize) -> Void
     let onScaleSelectionBy: (_ ids: Set<UUID>, _ factor: CGFloat) -> Void
@@ -98,6 +99,7 @@ struct CanvasView: View {
                         .onTapGesture {
                             if !showSelectionChrome {
                                 selectionViewModel.toggle(e.id)
+                                Haptics.selection()
                             }
                         }
                         /// Double-tap triggers delete confirmation dialog if selected
@@ -131,9 +133,15 @@ struct CanvasView: View {
             Button("Delete", role: .destructive) {
                 onRemoveSelection(selectionViewModel.ids)
                 selectionViewModel.clear()
+                didDelete.toggle()
+                Haptics.success()
             }
             Button("Cancel", role: .cancel) {}
         }
+        .withSensoryFeedback(
+            selectionTrigger: selectionViewModel.ids.count,
+            deleteTrigger: didDelete
+        )
         /// All pinches recognized on the document; branch by selection
         .gesture(magnifyGesture)
     }
@@ -193,4 +201,21 @@ struct CanvasView: View {
             }
     }
 
+}
+
+// MARK: - Sensory Feedback (modern-first with fallback)
+extension View {
+    @ViewBuilder
+    fileprivate func withSensoryFeedback(
+        selectionTrigger: Int,
+        deleteTrigger: Bool
+    ) -> some View {
+        if #available(iOS 17.0, *) {
+            self
+                .sensoryFeedback(.selection, trigger: selectionTrigger)
+                .sensoryFeedback(.success, trigger: deleteTrigger)
+        } else {
+            self
+        }
+    }
 }
