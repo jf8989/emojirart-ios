@@ -56,8 +56,16 @@ struct CanvasView: View {
                         || (abs(pinchScale - 1) > 0.001)
 
                     let minRenderedSize: CGFloat = 30
-                    let docScale = selectionViewModel.ids.isEmpty ? currentZoom : canvasUI.zoom
-                    let livePinchForSelection: CGFloat = (showSelectionChrome && !selectionViewModel.ids.isEmpty) ? max(1, minRenderedSize / (e.size * docScale)) : 1
+                    let docScale =
+                        selectionViewModel.ids.isEmpty
+                        ? currentZoom : canvasUI.zoom
+                    let required =
+                        minRenderedSize
+                        / max(e.size * max(docScale, 0.001), 0.001)
+                    let livePinchForSelection: CGFloat =
+                        (showSelectionChrome && !selectionViewModel.ids.isEmpty)
+                        ? max(pinchScale, required)
+                        : 1
 
                     Text(e.text)
                         .accessibilityLabel(Text(e.text))
