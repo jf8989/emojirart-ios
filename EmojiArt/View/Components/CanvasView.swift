@@ -55,84 +55,82 @@ struct CanvasView: View {
                         (emojiDragViewOffset != .zero)
                         || (abs(pinchScale - 1) > 0.001)
 
-                            /// Text with proper accessibility labels
-                            .accessibilityLabel(Text(e.text))
-                            .accessibilityHint(
-                                Text(
-                                    "Tap to select. Drag to move when selected. Double‑tap to delete."
+                    Text(e.text)
+                        .accessibilityLabel(Text(e.text))
+                        .accessibilityHint(
+                            "Tap to select. Drag to move when selected. Double‑tap to delete."
+                        )
+                        .font(.system(size: e.size))
+                        .padding(2)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 4)
+                                .stroke(
+                                    showSelectionChrome
+                                        ? Color.blue : .clear,
+                                    lineWidth: 2
                                 )
-                            )
-                            .font(.system(size: e.size))
-                            .padding(2)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 4)
-                                    .stroke(
-                                        showSelectionChrome
-                                            ? Color.blue : .clear,
-                                        lineWidth: 2
-                                    )
-                                    .opacity(
-                                        showSelectionChrome && !isInteracting
-                                            ? 1 : 0
-                                    )
-                            )
-                            .animation(nil, value: isInteracting)
-                            /// Live scale for selected emojis when pinching with a selection
-                            .scaleEffect(
-                                /// Base = document zoom (live during no-selection pinch, persisted otherwise)
-                                (selectionViewModel.ids.isEmpty
-                                    ? currentZoom : canvasUI.zoom)
-                                    /// If selecting, multipply ONLY selected glyphs by live pinch
-                                    * (showSelectionChrome
-                                        && !selectionViewModel.ids.isEmpty
-                                        ? pinchScale : 1)
-                            )
-                            /// live offset while dragging selection
-                            .offset(
-                                showSelectionChrome
-                                    ? emojiDragViewOffset : .zero
-                            )
-                            .zIndex(showSelectionChrome ? 1 : 0)
-                            .position(
-                                CanvasGeometry
-                                    .viewPoint(
-                                        fromModel: e.position,
-                                        pan: currentPan,
-                                        /// zoom doc live only when NO selection is made (selection path scales glyphs instead)
-                                        zoom: selectionViewModel.ids.isEmpty
-                                            ? currentZoom : canvasUI.zoom,
-                                        canvasSize: geo.size
-                                    )
-                            )
-                            /// Emoji tap: toggles selection if not selected; does nothing if already selected (prevents unselect on tap)
-                            .onTapGesture {
-                                if !showSelectionChrome {
-                                    selectionViewModel.toggle(e.id)
-                                    Haptics.selection()
-                                }
+                                .opacity(
+                                    showSelectionChrome && !isInteracting
+                                        ? 1 : 0
+                                )
+                        )
+                        .animation(nil, value: isInteracting)
+                        /// Live scale for selected emojis when pinching with a selection
+                        .scaleEffect(
+                            /// Base = document zoom (live during no-selection pinch, persisted otherwise)
+                            (selectionViewModel.ids.isEmpty
+                                ? currentZoom : canvasUI.zoom)
+                                /// If selecting, multiply ONLY selected glyphs by live pinch
+                                * (showSelectionChrome
+                                    && !selectionViewModel.ids.isEmpty
+                                    ? pinchScale : 1)
+                        )
+                        /// live offset while dragging selection
+                        .offset(
+                            showSelectionChrome
+                                ? emojiDragViewOffset : .zero
+                        )
+                        .zIndex(showSelectionChrome ? 1 : 0)
+                        .position(
+                            CanvasGeometry
+                                .viewPoint(
+                                    fromModel: e.position,
+                                    pan: currentPan,
+                                    /// zoom doc live only when NO selection is made (selection path scales glyphs instead)
+                                    zoom: selectionViewModel.ids.isEmpty
+                                        ? currentZoom : canvasUI.zoom,
+                                    canvasSize: geo.size
+                                )
+                        )
+                        /// Emoji tap: toggles selection if not selected; does nothing if already selected (prevents unselect on tap)
+                        .onTapGesture {
+                            if !showSelectionChrome {
+                                selectionViewModel.toggle(e.id)
+                                Haptics.selection()
                             }
-                            /// Double-tap triggers delete confirmation dialog if selected
-                            .onTapGesture(count: 2) {
-                                if showSelectionChrome {
+                        }
+                        /// Double-tap triggers delete confirmation dialog if selected
+                        .onTapGesture(count: 2) {
+                            if showSelectionChrome {
+                                showDeleteConfirm = true
+                            }
+                        }
+                        .gesture(
+                            showSelectionChrome ? emojiDragGesture : nil
+                        )
+                        /// Long-press context menu
+                        .contextMenu {
+                            if showSelectionChrome {
+                                Button(role: .destructive) {
                                     showDeleteConfirm = true
+                                } label: {
+                                    Label(
+                                        "Delete Selected",
+                                        systemImage: "trash"
+                                    )
                                 }
                             }
-                            .gesture(
-                                showSelectionChrome ? emojiDragGesture : nil
-                            )
-                            /// Long-press context menu
-                            .contextMenu {
-                                if showSelectionChrome {
-                                    Button(role: .destructive) {
-                                        showDeleteConfirm = true
-                                    } label: {
-                                        Label(
-                                            "Delete Selected",
-                                            systemImage: "trash"
-                                        )
-                                    }
-                                }
-                            }
+                        }
                 }
             }
         }
