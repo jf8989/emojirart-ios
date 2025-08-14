@@ -8,6 +8,7 @@ struct CanvasView: View {
 
     @ObservedObject var selectionViewModel: SelectionViewModel
     @ObservedObject var canvasUI: CanvasUIState
+    @State private var showDeleteConfirm: Bool = false
     let emojiGroup: [Emoji]
     let onMoveSelectionBy: (_ ids: Set<UUID>, _ modelDelta: CGSize) -> Void
     let onScaleSelectionBy: (_ ids: Set<UUID>, _ factor: CGFloat) -> Void
@@ -84,23 +85,24 @@ struct CanvasView: View {
                                     canvasSize: geo.size
                                 )
                         )
-                        /// Emoji tap
+                        /// Emoji tap: toggles selection if not selected; does nothing if already selected (prevents unselect on tap)
                         .onTapGesture {
-                            selectionViewModel.toggle(e.id)
+                            if !showSelectionChrome {
+                                selectionViewModel.toggle(e.id)
+                            }
                         }
-                        /// Double-tap deletes the entire selection if this emoji is in it
+                        /// Double-tap triggers delete confirmation dialog if selected
                         .onTapGesture(count: 2) {
-                            guard showSelectionChrome else { return }
-                            onRemoveSelection(selectionViewModel.ids)
-                            selectionViewModel.clear()
+                            if showSelectionChrome {
+                                showDeleteConfirm = true
+                            }
                         }
                         .gesture(showSelectionChrome ? emojiDragGesture : nil)
                         /// Long-press context menu
                         .contextMenu {
                             if showSelectionChrome {
                                 Button(role: .destructive) {
-                                    onRemoveSelection(selectionViewModel.ids)
-                                    selectionViewModel.clear()
+                                    showDeleteConfirm = true
                                 } label: {
                                     Label(
                                         "Delete Selected",
@@ -111,8 +113,20 @@ struct CanvasView: View {
                         }
                 }
             }
-        }/// All pinches recognized on the document; branch by selection
-            .gesture(magnifyGesture)
+        }
+        /// Centered alert above everything
+        .alert(
+            "Delete selected emoji\(selectionViewModel.ids.count > 1 ? "s" : "")?",
+            isPresented: $showDeleteConfirm
+        ) {
+            Button("Delete", role: .destructive) {
+                onRemoveSelection(selectionViewModel.ids)
+                selectionViewModel.clear()
+            }
+            Button("Cancel", role: .cancel) {}
+        }
+        /// All pinches recognized on the document; branch by selection
+        .gesture(magnifyGesture)
     }
 
     // MARK: - Derived pan (persisted + in-flight)
