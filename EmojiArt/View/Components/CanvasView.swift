@@ -11,6 +11,7 @@ struct CanvasView: View {
     let emojiGroup: [Emoji]
     let onMoveSelectionBy: (_ ids: Set<UUID>, _ modelDelta: CGSize) -> Void
     let onScaleSelectionBy: (_ ids: Set<UUID>, _ factor: CGFloat) -> Void
+    let onRemoveSelection: (_ ids: Set<UUID>) -> Void
 
     // MARK: - Gesture State
 
@@ -87,7 +88,27 @@ struct CanvasView: View {
                         .onTapGesture {
                             selectionViewModel.toggle(e.id)
                         }
+                        /// Double-tap deletes the entire selection if this emoji is in it
+                        .onTapGesture(count: 2) {
+                            guard showSelectionChrome else { return }
+                            onRemoveSelection(selectionViewModel.ids)
+                            selectionViewModel.clear()
+                        }
                         .gesture(showSelectionChrome ? emojiDragGesture : nil)
+                        /// Long-press context menu
+                        .contextMenu {
+                            if showSelectionChrome {
+                                Button(role: .destructive) {
+                                    onRemoveSelection(selectionViewModel.ids)
+                                    selectionViewModel.clear()
+                                } label: {
+                                    Label(
+                                        "Delete Selected",
+                                        systemImage: "trash"
+                                    )
+                                }
+                            }
+                        }
                 }
             }
         }/// All pinches recognized on the document; branch by selection

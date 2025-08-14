@@ -22,7 +22,8 @@ struct EmojiArtMainView: View {
                 onScaleSelectionBy: {
                     ids,
                     factor in viewModel.scale(ids, by: factor)
-                }
+                },
+                onRemoveSelection: { ids in viewModel.remove(ids) }
             )
             Divider()
             paletteView
