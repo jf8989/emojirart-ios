@@ -11,8 +11,12 @@ struct EmojiArtMainView: View {
                 CanvasView(
                     vm: viewModel,
                     emojiGroup: viewModel.canvas.emojiGroup,
-                    onMoveSelectionBy: { ids, delta in viewModel.move(ids, by: delta) },
-                    onScaleSelectionBy: { ids, factor in viewModel.scale(ids, by: factor) },
+                    onMoveSelectionBy: { ids, delta in
+                        viewModel.move(ids, by: delta)
+                    },
+                    onScaleSelectionBy: { ids, factor in
+                        viewModel.scale(ids, by: factor)
+                    },
                     onRemoveSelection: { ids in viewModel.remove(ids) }
                 )
                 Divider()

@@ -51,19 +51,12 @@ struct CanvasView: View {
                             "Tap to select. Drag to move when selected. Double‑tap to delete."
                         )
                         .font(.system(size: e.size))
-                        .padding(2)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 4)
-                                .stroke(
-                                    showSelectionChrome ? Color.blue : .clear,
-                                    lineWidth: 2
-                                )
-                                .opacity(
-                                    showSelectionChrome && !isInteracting
-                                        ? 1 : 0
-                                )
+                        .selectionChrome(
+                            isSelected: showSelectionChrome,
+                            isInteracting: isInteracting,
+                            cornerRadius: 4,
+                            lineWidth: 2
                         )
-                        .animation(nil, value: isInteracting)
                         .scaleEffect(docScale * livePinchForSelection)
                         .offset(
                             showSelectionChrome ? emojiDragViewOffset : .zero
