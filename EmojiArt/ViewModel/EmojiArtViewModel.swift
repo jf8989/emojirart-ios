@@ -3,19 +3,34 @@
 import SwiftUI
 
 final class EmojiArtViewModel: ObservableObject {
+    // MARK: - Domain
     @Published private(set) var canvas = EmojiArtCanvas()
 
-    // MARK: - Intent Methods
+    // MARK: - UI (transient) + Selection (UI-only), now owned here
+    @Published var ui = UIState()
+    @Published var selection = Selection()
 
+    // MARK: - UI Sub-Types (kept small; single responsibility)
+    struct UIState {
+        var pan: CGSize = .zero
+        var zoom: CGFloat = 1
+        var showDeleteConfirm: Bool = false
+        var didDelete: Bool = false
+    }
+    struct Selection {
+        var ids = Set<UUID>()
+        mutating func toggle(_ id: UUID) { ids.formSymmetricDifference([id]) }
+        mutating func clear() { ids.removeAll() }
+        func contains(_ id: UUID) -> Bool { ids.contains(id) }
+    }
+
+    // MARK: - Helpers read by views
+    func isSelected(_ id: UUID) -> Bool { selection.contains(id) }
+
+    // MARK: - Intent Methods (domain only)
     func addEmoji(_ text: String, at modelPoint: CGPoint, size: CGFloat = 40) {
-        /// Appends an emoji struct to the array for visualization
         canvas.emojiGroup.append(
-            .init(
-                id: UUID(),
-                text: text,
-                position: modelPoint,
-                size: size
-            )
+            .init(id: UUID(), text: text, position: modelPoint, size: size)
         )
     }
 
@@ -40,9 +55,7 @@ final class EmojiArtViewModel: ObservableObject {
     }
 
     // MARK: - Reset
-
     func resetCanvas() {
-        // Clears all emojis from the canvas (does not affect UI-only pan/zoom)
         canvas.emojiGroup.removeAll()
     }
 }

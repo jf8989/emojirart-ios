@@ -4,68 +4,46 @@ import SwiftUI
 
 struct CanvasView: View {
 
-    // MARK: - Inputs
-
-    @ObservedObject var selectionViewModel: SelectionViewModel
-    @ObservedObject var canvasUI: CanvasUIState
-    @State private var showDeleteConfirm: Bool = false
-    @State private var didDelete = false
+    // MARK: - Inputs (now single VM)
+    @ObservedObject var vm: EmojiArtViewModel
     let emojiGroup: [Emoji]
     let onMoveSelectionBy: (_ ids: Set<UUID>, _ modelDelta: CGSize) -> Void
     let onScaleSelectionBy: (_ ids: Set<UUID>, _ factor: CGFloat) -> Void
     let onRemoveSelection: (_ ids: Set<UUID>) -> Void
 
     // MARK: - Gesture State
-
-    /// view-space delta during background pan
     @GestureState private var panDragViewOffset: CGSize = .zero
-    /// view-space delta during emoji drag
     @GestureState private var emojiDragViewOffset: CGSize = .zero
     @GestureState private var pinchScale: CGFloat = 1
 
-    // MARK: - Body View
-
-    var body: some View {
-        canvasPlayground
-    }
+    var body: some View { canvasPlayground }
 
     var canvasPlayground: some View {
         GeometryReader { geo in
             ZStack {
-
-                // MARK: - Background Layer
-
-                /// Builds the white background
+                // Background
                 Color.white.ignoresSafeArea()
                     .contentShape(Rectangle())
-                    /// Background tap clears selection
-                    .onTapGesture { selectionViewModel.clear() }
-                    /// Background drag pans the document ONLY when nothing is selected
+                    .onTapGesture { vm.selection.clear() }
                     .gesture(
-                        selectionViewModel.ids.isEmpty
-                            ? backgroundPanGesture : nil
+                        vm.selection.ids.isEmpty ? backgroundPanGesture : nil
                     )
 
-                // MARK: - Emoji Layer
-
-                /// Only those with a diff get redrawn
+                // Emoji Layer
                 ForEach(emojiGroup) { e in
-                    let showSelectionChrome = selectionViewModel.contains(e.id)
+                    let showSelectionChrome = vm.isSelected(e.id)
                     let isInteracting =
                         (emojiDragViewOffset != .zero)
                         || (abs(pinchScale - 1) > 0.001)
-
                     let minRenderedSize: CGFloat = 30
                     let docScale =
-                        selectionViewModel.ids.isEmpty
-                        ? currentZoom : canvasUI.zoom
+                        vm.selection.ids.isEmpty ? currentZoom : vm.ui.zoom
                     let required =
                         minRenderedSize
                         / max(e.size * max(docScale, 0.001), 0.001)
                     let livePinchForSelection: CGFloat =
-                        (showSelectionChrome && !selectionViewModel.ids.isEmpty)
-                        ? max(pinchScale, required)
-                        : 1
+                        (showSelectionChrome && !vm.selection.ids.isEmpty)
+                        ? max(pinchScale, required) : 1
 
                     Text(e.text)
                         .accessibilityLabel(Text(e.text))
@@ -77,8 +55,7 @@ struct CanvasView: View {
                         .overlay(
                             RoundedRectangle(cornerRadius: 4)
                                 .stroke(
-                                    showSelectionChrome
-                                        ? Color.blue : .clear,
+                                    showSelectionChrome ? Color.blue : .clear,
                                     lineWidth: 2
                                 )
                                 .opacity(
@@ -87,46 +64,36 @@ struct CanvasView: View {
                                 )
                         )
                         .animation(nil, value: isInteracting)
-                        /// Live scale for selected emojis when pinching with a selection
                         .scaleEffect(docScale * livePinchForSelection)
-                        /// live offset while dragging selection
                         .offset(
-                            showSelectionChrome
-                                ? emojiDragViewOffset : .zero
+                            showSelectionChrome ? emojiDragViewOffset : .zero
                         )
                         .zIndex(showSelectionChrome ? 1 : 0)
                         .position(
-                            CanvasGeometry
-                                .viewPoint(
-                                    fromModel: e.position,
-                                    pan: currentPan,
-                                    /// zoom doc live only when NO selection is made (selection path scales glyphs instead)
-                                    zoom: selectionViewModel.ids.isEmpty
-                                        ? currentZoom : canvasUI.zoom,
-                                    canvasSize: geo.size
-                                )
+                            CanvasGeometry.viewPoint(
+                                fromModel: e.position,
+                                pan: currentPan,
+                                zoom: vm.selection.ids.isEmpty
+                                    ? currentZoom : vm.ui.zoom,
+                                canvasSize: geo.size
+                            )
                         )
-                        /// Emoji tap: toggles selection if not selected; does nothing if already selected (prevents unselect on tap)
                         .onTapGesture {
                             if !showSelectionChrome {
-                                selectionViewModel.toggle(e.id)
+                                vm.selection.toggle(e.id)
                                 Haptics.selection()
                             }
                         }
-                        /// Double-tap triggers delete confirmation dialog if selected
                         .onTapGesture(count: 2) {
                             if showSelectionChrome {
-                                showDeleteConfirm = true
+                                vm.ui.showDeleteConfirm = true
                             }
                         }
-                        .gesture(
-                            showSelectionChrome ? emojiDragGesture : nil
-                        )
-                        /// Long-press context menu
+                        .gesture(showSelectionChrome ? emojiDragGesture : nil)
                         .contextMenu {
                             if showSelectionChrome {
                                 Button(role: .destructive) {
-                                    showDeleteConfirm = true
+                                    vm.ui.showDeleteConfirm = true
                                 } label: {
                                     Label(
                                         "Delete Selected",
@@ -138,48 +105,44 @@ struct CanvasView: View {
                 }
             }
         }
-        /// Centered alert above everything
+        // Alert (flags now in vm.ui)
         .alert(
-            "Delete selected emoji\(selectionViewModel.ids.count > 1 ? "s" : "")?",
-            isPresented: $showDeleteConfirm
+            "Delete selected emoji\(vm.selection.ids.count > 1 ? "s" : "")?",
+            isPresented: $vm.ui.showDeleteConfirm
         ) {
             Button("Delete", role: .destructive) {
-                onRemoveSelection(selectionViewModel.ids)
-                selectionViewModel.clear()
-                didDelete.toggle()
+                onRemoveSelection(vm.selection.ids)
+                vm.selection.clear()
+                vm.ui.didDelete.toggle()
                 Haptics.success()
             }
             Button("Cancel", role: .cancel) {}
         }
         .withSensoryFeedback(
-            selectionTrigger: selectionViewModel.ids.count,
-            deleteTrigger: didDelete
+            selectionTrigger: vm.selection.ids.count,
+            deleteTrigger: vm.ui.didDelete
         )
-        /// All pinches recognized on the document; branch by selection
         .gesture(magnifyGesture)
     }
 
     // MARK: - Derived pan (persisted + in-flight)
-
     private var currentPan: CGSize {
         .init(
-            width: canvasUI.pan.width + panDragViewOffset.width,
-            height: canvasUI.pan.height + panDragViewOffset.height
+            width: vm.ui.pan.width + panDragViewOffset.width,
+            height: vm.ui.pan.height + panDragViewOffset.height
         )
     }
-
-    private var currentZoom: CGFloat { canvasUI.zoom * pinchScale }
+    private var currentZoom: CGFloat { vm.ui.zoom * pinchScale }
 
     // MARK: - Gestures
-
     private var backgroundPanGesture: some Gesture {
         DragGesture()
             .updating($panDragViewOffset) { value, state, _ in
                 state = value.translation
             }
             .onEnded { value in
-                canvasUI.pan.width += value.translation.width
-                canvasUI.pan.height += value.translation.height
+                vm.ui.pan.width += value.translation.width
+                vm.ui.pan.height += value.translation.height
             }
     }
 
@@ -191,32 +154,26 @@ struct CanvasView: View {
             .onEnded { value in
                 let modelDelta = CanvasGeometry.modelDelta(
                     fromViewDelta: value.translation,
-                    zoom: canvasUI.zoom
+                    zoom: vm.ui.zoom
                 )
-                onMoveSelectionBy(selectionViewModel.ids, modelDelta)
+                onMoveSelectionBy(vm.selection.ids, modelDelta)
             }
     }
 
     private var magnifyGesture: some Gesture {
         MagnificationGesture()
-            .updating($pinchScale) { value, state, _ in
-                state = value
-            }
+            .updating($pinchScale) { value, state, _ in state = value }
             .onEnded { final in
-                if selectionViewModel.ids.isEmpty {
-                    /// commit document zoom; clamp to sane range
-                    let clamped = min(max(canvasUI.zoom * final, 0.25), 8.0)
-                    canvasUI.zoom = clamped
+                if vm.selection.ids.isEmpty {
+                    vm.ui.zoom = min(max(vm.ui.zoom * final, 0.25), 8.0)
                 } else {
-                    /// commit selection scale to model sizes
-                    onScaleSelectionBy(selectionViewModel.ids, final)
+                    onScaleSelectionBy(vm.selection.ids, final)
                 }
             }
     }
-
 }
 
-// MARK: - Sensory Feedback (modern-first with fallback)
+// MARK: - Sensory Feedback (unchanged)
 extension View {
     @ViewBuilder
     fileprivate func withSensoryFeedback(
