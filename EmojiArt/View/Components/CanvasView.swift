@@ -35,8 +35,6 @@ struct CanvasView: View {
                         vm: vm,
                         emoji: e,
                         pinchScale: pinchScale,
-                        currentPan: currentPan,
-                        currentZoom: currentZoom,
                         canvasSize: geo.size,
                         selectionDragOffset: $selectionDragOffset,
                         onMoveSelectionBy: onMoveSelectionBy,
@@ -68,14 +66,13 @@ struct CanvasView: View {
             livePinchScale: $pinchScale,
             onScaleSelectionBy: onScaleSelectionBy
         )
-    }
-
-    // MARK: - Derived viewport
-    private var currentPan: CGSize {
-        CanvasViewport.pan(vm.ui.pan, panDragViewOffset)
-    }
-    private var currentZoom: CGFloat {
-        CanvasViewport.zoom(vm.ui.zoom, pinchScale)
+        // Provide combined pan/zoom to children via Environment
+        .provideCanvasViewport(
+            persistedPan: vm.ui.pan,
+            livePan: panDragViewOffset,
+            persistedZoom: vm.ui.zoom,
+            pinchScale: pinchScale
+        )
     }
 
     // MARK: - Gestures

@@ -2,7 +2,7 @@
 
 import CoreGraphics
 
-enum CanvasViewport {
+enum CanvasViewportMath {
     static func pan(_ persisted: CGSize, _ live: CGSize) -> CGSize {
         .init(
             width: persisted.width + live.width,

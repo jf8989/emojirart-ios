@@ -1,18 +1,16 @@
 // View/Components/EmojiNodeView.swift
-
 import SwiftUI
 
 struct EmojiNodeView: View {
     @ObservedObject var vm: EmojiArtViewModel
     let emoji: Emoji
     let pinchScale: CGFloat
-    let currentPan: CGSize
-    let currentZoom: CGFloat
     let canvasSize: CGSize
     @Binding var selectionDragOffset: CGSize
     let onMoveSelectionBy: (_ ids: Set<UUID>, _ modelDelta: CGSize) -> Void
     let onRequestDelete: () -> Void
 
+    @Environment(\.canvasViewport) private var viewport
     @State private var isDraggingSelection = false
 
     var body: some View {
@@ -20,7 +18,7 @@ struct EmojiNodeView: View {
         let isInteracting = isDraggingSelection || (abs(pinchScale - 1) > 0.001)
 
         let minRenderedSize: CGFloat = 30
-        let docScale = vm.selection.ids.isEmpty ? currentZoom : vm.ui.zoom
+        let docScale = vm.selection.ids.isEmpty ? viewport.zoom : vm.ui.zoom
         let required =
             minRenderedSize / max(emoji.size * max(docScale, 0.001), 0.001)
         let livePinchForSelection: CGFloat =
@@ -43,8 +41,8 @@ struct EmojiNodeView: View {
             .position(
                 CanvasGeometry.viewPoint(
                     fromModel: emoji.position,
-                    pan: currentPan,
-                    zoom: vm.selection.ids.isEmpty ? currentZoom : vm.ui.zoom,
+                    pan: viewport.pan,
+                    zoom: vm.selection.ids.isEmpty ? viewport.zoom : vm.ui.zoom,
                     canvasSize: canvasSize
                 )
             )
