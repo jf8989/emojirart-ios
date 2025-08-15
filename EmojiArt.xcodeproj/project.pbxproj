@@ -6,7 +6,12 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		748F64F02E4FE26C001F7C6F /* ImageNodeView.txt in Resources */ = {isa = PBXBuildFile; fileRef = 748F64EF2E4FE26C001F7C6F /* ImageNodeView.txt */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
+		748F64EF2E4FE26C001F7C6F /* ImageNodeView.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = ImageNodeView.txt; sourceTree = "<group>"; };
 		74A7AF6E2E4BCBAF0015D56C /* EmojiArt.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = EmojiArt.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -34,6 +39,7 @@
 			children = (
 				74A7AF702E4BCBAF0015D56C /* EmojiArt */,
 				74A7AF6F2E4BCBAF0015D56C /* Products */,
+				748F64EF2E4FE26C001F7C6F /* ImageNodeView.txt */,
 			);
 			sourceTree = "<group>";
 		};
@@ -109,6 +115,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				748F64F02E4FE26C001F7C6F /* ImageNodeView.txt in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

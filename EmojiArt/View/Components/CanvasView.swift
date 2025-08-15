@@ -35,29 +35,11 @@ struct CanvasView: View {
 
                 // MARK: - Images Layer (renders dropped images behind emojis)
                 ForEach(vm.canvas.images) { img in
-                    if let uiImage = UIImage(data: img.data) {
-                        Image(uiImage: uiImage)
-                            .resizable()
-                            .interpolation(.medium)
-                            .scaledToFit()
-                            .frame(
-                                width: img.size
-                                    * (vm.selection.ids.isEmpty
-                                        ? viewport.zoom : vm.ui.zoom),
-                                height: img.size
-                                    * (vm.selection.ids.isEmpty
-                                        ? viewport.zoom : vm.ui.zoom)
-                            )
-                            .position(
-                                CanvasGeometry.viewPoint(
-                                    fromModel: img.position,
-                                    pan: viewport.pan,
-                                    zoom: vm.selection.ids.isEmpty
-                                        ? viewport.zoom : vm.ui.zoom,
-                                    canvasSize: geo.size
-                                )
-                            )
-                    }
+                    ImageNodeView(
+                        vm: vm,
+                        item: img,
+                        canvasSize: geo.size
+                    )
                 }
 
                 // MARK: - Emoji Layer
