@@ -8,17 +8,16 @@ public struct DraggableIfSelected: ViewModifier {
     let selectionIDs: () -> Set<UUID>
     let onMoveSelectionBy: (_ ids: Set<UUID>, _ modelDelta: CGSize) -> Void
     let onDraggingChange: (Bool) -> Void
-
-    @GestureState private var dragOffset: CGSize = .zero
+    @Binding var liveSelectionOffset: CGSize  // shared across all selected
 
     public func body(content: Content) -> some View {
         content
-            .offset(isSelected ? dragOffset : .zero)
+            .offset(isSelected ? liveSelectionOffset : .zero)
             .gesture(
                 isSelected
                     ? DragGesture()
-                        .updating($dragOffset) { value, state, _ in
-                            state = value.translation
+                        .onChanged { value in
+                            liveSelectionOffset = value.translation
                             onDraggingChange(true)
                         }
                         .onEnded { value in
@@ -27,6 +26,7 @@ public struct DraggableIfSelected: ViewModifier {
                                 zoom: max(modelZoom, 0.001)
                             )
                             onMoveSelectionBy(selectionIDs(), modelDelta)
+                            liveSelectionOffset = .zero
                             onDraggingChange(false)
                         }
                     : nil
@@ -39,6 +39,7 @@ extension View {
         isSelected: Bool,
         modelZoom: CGFloat,
         selectionIDs: @escaping () -> Set<UUID>,
+        liveSelectionOffset: Binding<CGSize>,  // <-- add this
         onMoveSelectionBy: @escaping (_ ids: Set<UUID>, _ modelDelta: CGSize) ->
             Void,
         onDraggingChange: @escaping (Bool) -> Void
@@ -49,7 +50,8 @@ extension View {
                 modelZoom: modelZoom,
                 selectionIDs: selectionIDs,
                 onMoveSelectionBy: onMoveSelectionBy,
-                onDraggingChange: onDraggingChange
+                onDraggingChange: onDraggingChange,
+                liveSelectionOffset: liveSelectionOffset
             )
         )
     }

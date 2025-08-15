@@ -4,7 +4,7 @@ import SwiftUI
 
 struct CanvasView: View {
 
-    // MARK: - Inputs (now single VM)
+    // MARK: - Inputs (single VM)
     @ObservedObject var vm: EmojiArtViewModel
     let emojiGroup: [Emoji]
     let onMoveSelectionBy: (_ ids: Set<UUID>, _ modelDelta: CGSize) -> Void
@@ -12,16 +12,17 @@ struct CanvasView: View {
     let onRemoveSelection: (_ ids: Set<UUID>) -> Void
 
     // MARK: - Gesture/Live UI State
-    @GestureState private var panDragViewOffset: CGSize = .zero
-    @State private var pinchScale: CGFloat = 1
-    @State private var isDraggingSelection = false  // for chrome hide during drag
+    @GestureState private var panDragViewOffset: CGSize = .zero  // in-flight doc pan
+    @State private var pinchScale: CGFloat = 1  // in-flight pinch
+    @State private var isDraggingSelection = false  // hides chrome while dragging
+    @State private var selectionDragOffset: CGSize = .zero  // shared live offset for multi-select drag
 
     var body: some View { canvasPlayground }
 
     var canvasPlayground: some View {
         GeometryReader { geo in
             ZStack {
-                // Background
+                // MARK: - Background
                 Color.white.ignoresSafeArea()
                     .contentShape(Rectangle())
                     .onTapGesture { vm.selection.clear() }
@@ -29,7 +30,7 @@ struct CanvasView: View {
                         vm.selection.ids.isEmpty ? backgroundPanGesture : nil
                     )
 
-                // Emoji Layer
+                // MARK: - Emoji Layer
                 ForEach(emojiGroup) { e in
                     let isSelected = vm.isSelected(e.id)
                     let isInteracting =
@@ -67,17 +68,16 @@ struct CanvasView: View {
                                 canvasSize: geo.size
                             )
                         )
-                        // Per‑emoji drag (only when selected), with live offset + commit
+                        // Live drag for entire selection (shared offset), commit on end
                         .draggableIfSelected(
                             isSelected: isSelected,
                             modelZoom: vm.ui.zoom,
                             selectionIDs: { vm.selection.ids },
+                            liveSelectionOffset: $selectionDragOffset,
                             onMoveSelectionBy: onMoveSelectionBy,
-                            onDraggingChange: { isDragging in
-                                isDraggingSelection = isDragging
-                            }
+                            onDraggingChange: { isDraggingSelection = $0 }
                         )
-                        // Tap/double‑tap/context menu (unchanged behavior)
+                        // Tap to select / double‑tap to delete / context menu
                         .selectionInteractions(
                             isSelected: isSelected,
                             onSelect: {
@@ -90,7 +90,7 @@ struct CanvasView: View {
                 }
             }
         }
-        // Alert (flags now in vm.ui)
+        // MARK: - Alert & Feedback
         .alert(
             "Delete selected emoji\(vm.selection.ids.count > 1 ? "s" : "")?",
             isPresented: $vm.ui.showDeleteConfirm
@@ -107,7 +107,7 @@ struct CanvasView: View {
             selectionTrigger: vm.selection.ids.count,
             deleteTrigger: vm.ui.didDelete
         )
-        // Pinch handling via modifier (no overlay; doesn’t block taps)
+        // Pinch handling (doc zoom or selection scale)
         .canvasGestures(
             vm: vm,
             livePinchScale: $pinchScale,
@@ -115,16 +115,15 @@ struct CanvasView: View {
         )
     }
 
-    // MARK: - Derived pan (persisted + in-flight)
+    // MARK: - Derived viewport
     private var currentPan: CGSize {
-        .init(
-            width: vm.ui.pan.width + panDragViewOffset.width,
-            height: vm.ui.pan.height + panDragViewOffset.height
-        )
+        CanvasViewport.pan(vm.ui.pan, panDragViewOffset)
     }
-    private var currentZoom: CGFloat { vm.ui.zoom * pinchScale }
+    private var currentZoom: CGFloat {
+        CanvasViewport.zoom(vm.ui.zoom, pinchScale)
+    }
 
-    // MARK: - Gestures (background only; per-emoji drag lives in modifier)
+    // MARK: - Gestures
     private var backgroundPanGesture: some Gesture {
         DragGesture()
             .updating($panDragViewOffset) { value, state, _ in
