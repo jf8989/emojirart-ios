@@ -38,7 +38,11 @@ struct CanvasView: View {
                     ImageNodeView(
                         vm: vm,
                         item: img,
-                        canvasSize: geo.size
+                        pinchScale: pinchScale,
+                        canvasSize: geo.size,
+                        selectionDragOffset: $selectionDragOffset,
+                        onMoveSelectionBy: onMoveSelectionBy,
+                        onRequestDelete: { vm.ui.showDeleteConfirm = true }
                     )
                 }
 

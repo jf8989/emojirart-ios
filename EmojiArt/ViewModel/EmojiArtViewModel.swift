@@ -36,6 +36,7 @@ final class EmojiArtViewModel: ObservableObject {
 
     func remove(_ ids: Set<UUID>) {
         canvas.emojiGroup.removeAll { ids.contains($0.id) }
+        canvas.images.removeAll { ids.contains($0.id) }
     }
 
     func move(_ ids: Set<UUID>, by modelDelta: CGSize) {
@@ -44,6 +45,11 @@ final class EmojiArtViewModel: ObservableObject {
             canvas.emojiGroup[i].position.x += modelDelta.width
             canvas.emojiGroup[i].position.y += modelDelta.height
         }
+        for i in canvas.images.indices where ids.contains(canvas.images[i].id)
+        {
+            canvas.images[i].position.x += modelDelta.width
+            canvas.images[i].position.y += modelDelta.height
+        }
     }
 
     func scale(_ ids: Set<UUID>, by factor: CGFloat) {
@@ -51,6 +57,12 @@ final class EmojiArtViewModel: ObservableObject {
         where ids.contains(canvas.emojiGroup[i].id) {
             canvas.emojiGroup[i].size = (canvas.emojiGroup[i].size * factor)
                 .clamped(to: 30...512)
+        }
+        for i in canvas.images.indices where ids.contains(canvas.images[i].id)
+        {
+            canvas.images[i].size = (canvas.images[i].size * factor).clamped(
+                to: 40...2048
+            )
         }
     }
 
