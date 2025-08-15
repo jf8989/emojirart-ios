@@ -4,4 +4,5 @@ import Foundation
 
 struct EmojiArtCanvas {
     var emojiGroup: [Emoji] = []
+    var images: [CanvasImage] = []
 }

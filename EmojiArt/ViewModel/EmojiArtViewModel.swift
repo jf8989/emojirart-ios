@@ -54,6 +54,22 @@ final class EmojiArtViewModel: ObservableObject {
         }
     }
 
+    // MARK: - Image Intents
+    func addImage(data: Data, at modelPoint: CGPoint, size: CGFloat = 120) {
+        canvas.images.append(
+            CanvasImage(
+                id: UUID(),
+                data: data,
+                position: modelPoint,
+                size: size.clamped(to: 40...1024)
+            )
+        )
+    }
+
+    func isAcceptableImage(_ data: Data, maxMB: Double = 8) -> Bool {
+        Double(data.count) / (1024 * 1024) <= maxMB
+    }
+
     // MARK: - Reset
     func resetCanvas() {
         canvas.emojiGroup.removeAll()

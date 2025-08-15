@@ -1,6 +1,7 @@
 // View/Components/CanvasView.swift
 
 import SwiftUI
+import UIKit
 
 struct CanvasView: View {
 
@@ -16,6 +17,9 @@ struct CanvasView: View {
     @State private var pinchScale: CGFloat = 1  // in-flight pinch
     @State private var selectionDragOffset: CGSize = .zero  // shared live offset for multi-select drag
 
+    // MARK: - Viewport (combined pan/zoom injected for children)
+    @Environment(\.canvasViewport) private var viewport
+
     var body: some View { canvasPlayground }
 
     var canvasPlayground: some View {
@@ -29,6 +33,33 @@ struct CanvasView: View {
                         vm.selection.ids.isEmpty ? backgroundPanGesture : nil
                     )
 
+                // MARK: - Images Layer (renders dropped images behind emojis)
+                ForEach(vm.canvas.images) { img in
+                    if let uiImage = UIImage(data: img.data) {
+                        Image(uiImage: uiImage)
+                            .resizable()
+                            .interpolation(.medium)
+                            .scaledToFit()
+                            .frame(
+                                width: img.size
+                                    * (vm.selection.ids.isEmpty
+                                        ? viewport.zoom : vm.ui.zoom),
+                                height: img.size
+                                    * (vm.selection.ids.isEmpty
+                                        ? viewport.zoom : vm.ui.zoom)
+                            )
+                            .position(
+                                CanvasGeometry.viewPoint(
+                                    fromModel: img.position,
+                                    pan: viewport.pan,
+                                    zoom: vm.selection.ids.isEmpty
+                                        ? viewport.zoom : vm.ui.zoom,
+                                    canvasSize: geo.size
+                                )
+                            )
+                    }
+                }
+
                 // MARK: - Emoji Layer
                 ForEach(emojiGroup) { e in
                     EmojiNodeView(
@@ -41,6 +72,74 @@ struct CanvasView: View {
                         onRequestDelete: { vm.ui.showDeleteConfirm = true }
                     )
                 }
+            }
+            // MARK: - Modern Drop Target (Transferable, raw image bytes)
+            .dropDestination(for: DroppedImage.self) { items, location in
+                let modelPoint = CanvasGeometry.modelPoint(
+                    fromView: location,
+                    pan: viewport.pan,
+                    zoom: viewport.zoom,
+                    canvasSize: geo.size
+                )
+                let initialSize: CGFloat = (120 / max(viewport.zoom, 0.001))
+                    .clamped(to: 40...512)
+
+                for item in items {
+                    if case .data(let data) = item.source,
+                        vm.isAcceptableImage(data)
+                    {
+                        vm.addImage(
+                            data: data,
+                            at: modelPoint,
+                            size: initialSize
+                        )
+                    }
+                }
+                return true
+            }
+            // MARK: - URLs (web links AND file URLs from Files/Mac)
+            .dropDestination(for: URL.self) { urls, location in
+                let modelPoint = CanvasGeometry.modelPoint(
+                    fromView: location,
+                    pan: viewport.pan,
+                    zoom: viewport.zoom,
+                    canvasSize: geo.size
+                )
+                let initialSize: CGFloat = (120 / max(viewport.zoom, 0.001))
+                    .clamped(to: 40...512)
+
+                for url in urls {
+                    if url.isFileURL {
+                        if let data = try? Data(contentsOf: url),
+                            vm.isAcceptableImage(data)
+                        {
+                            vm.addImage(
+                                data: data,
+                                at: modelPoint,
+                                size: initialSize
+                            )
+                        }
+                    } else {
+                        Task {
+                            do {
+                                let (data, _) = try await URLSession.shared
+                                    .data(from: url)
+                                if vm.isAcceptableImage(data) {
+                                    await MainActor.run {
+                                        vm.addImage(
+                                            data: data,
+                                            at: modelPoint,
+                                            size: initialSize
+                                        )
+                                    }
+                                }
+                            } catch {
+                                // ignore non-image or network errors for this sprint
+                            }
+                        }
+                    }
+                }
+                return true
             }
         }
         // MARK: - Alert & Feedback
