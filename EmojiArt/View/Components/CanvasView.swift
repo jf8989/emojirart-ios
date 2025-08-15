@@ -22,7 +22,7 @@ struct CanvasView: View {
         GeometryReader { geo in
             ZStack {
                 // MARK: - Background
-                Color.white.ignoresSafeArea()
+                Color.primary.ignoresSafeArea()
                     .contentShape(Rectangle())
                     .onTapGesture { vm.selection.clear() }
                     .gesture(
