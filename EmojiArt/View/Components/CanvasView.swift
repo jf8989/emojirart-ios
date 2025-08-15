@@ -14,7 +14,6 @@ struct CanvasView: View {
     // MARK: - Gesture/Live UI State
     @GestureState private var panDragViewOffset: CGSize = .zero  // in-flight doc pan
     @State private var pinchScale: CGFloat = 1  // in-flight pinch
-    @State private var isDraggingSelection = false  // hides chrome while dragging
     @State private var selectionDragOffset: CGSize = .zero  // shared live offset for multi-select drag
 
     var body: some View { canvasPlayground }
@@ -32,61 +31,17 @@ struct CanvasView: View {
 
                 // MARK: - Emoji Layer
                 ForEach(emojiGroup) { e in
-                    let isSelected = vm.isSelected(e.id)
-                    let isInteracting =
-                        isDraggingSelection || (abs(pinchScale - 1) > 0.001)
-
-                    let minRenderedSize: CGFloat = 30
-                    let docScale =
-                        vm.selection.ids.isEmpty ? currentZoom : vm.ui.zoom
-                    let required =
-                        minRenderedSize
-                        / max(e.size * max(docScale, 0.001), 0.001)
-                    let livePinchForSelection: CGFloat =
-                        (isSelected && !vm.selection.ids.isEmpty)
-                        ? max(pinchScale, required) : 1
-
-                    Text(e.text)
-                        .accessibilityLabel(Text(e.text))
-                        .accessibilityHint(
-                            "Tap to select. Drag to move when selected. Double‑tap to delete."
-                        )
-                        .font(.system(size: e.size))
-                        .selectionChrome(
-                            isSelected: isSelected,
-                            isInteracting: isInteracting,
-                            cornerRadius: 4,
-                            lineWidth: 2
-                        )
-                        .scaleEffect(docScale * livePinchForSelection)
-                        .position(
-                            CanvasGeometry.viewPoint(
-                                fromModel: e.position,
-                                pan: currentPan,
-                                zoom: vm.selection.ids.isEmpty
-                                    ? currentZoom : vm.ui.zoom,
-                                canvasSize: geo.size
-                            )
-                        )
-                        // Live drag for entire selection (shared offset), commit on end
-                        .draggableIfSelected(
-                            isSelected: isSelected,
-                            modelZoom: vm.ui.zoom,
-                            selectionIDs: { vm.selection.ids },
-                            liveSelectionOffset: $selectionDragOffset,
-                            onMoveSelectionBy: onMoveSelectionBy,
-                            onDraggingChange: { isDraggingSelection = $0 }
-                        )
-                        // Tap to select / double‑tap to delete / context menu
-                        .selectionInteractions(
-                            isSelected: isSelected,
-                            onSelect: {
-                                vm.selection.toggle(e.id)
-                                Haptics.selection()
-                            },
-                            onRequestDelete: { vm.ui.showDeleteConfirm = true }
-                        )
-                        .zIndex(isSelected ? 1 : 0)
+                    EmojiNodeView(
+                        vm: vm,
+                        emoji: e,
+                        pinchScale: pinchScale,
+                        currentPan: currentPan,
+                        currentZoom: currentZoom,
+                        canvasSize: geo.size,
+                        selectionDragOffset: $selectionDragOffset,
+                        onMoveSelectionBy: onMoveSelectionBy,
+                        onRequestDelete: { vm.ui.showDeleteConfirm = true }
+                    )
                 }
             }
         }
