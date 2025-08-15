@@ -2,9 +2,9 @@
 
 import SwiftUI
 
-public extension View {
+extension View {
     @ViewBuilder
-    func withSensoryFeedback(
+    public func withSensoryFeedback(
         selectionTrigger: Int,
         deleteTrigger: Bool
     ) -> some View {

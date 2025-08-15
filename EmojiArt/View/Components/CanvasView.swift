@@ -11,21 +11,17 @@ struct CanvasView: View {
     let onScaleSelectionBy: (_ ids: Set<UUID>, _ factor: CGFloat) -> Void
     let onRemoveSelection: (_ ids: Set<UUID>) -> Void
 
-    // MARK: - Gesture State
-
-    /// Per-emoji drag stays local.
-    @GestureState private var emojiDragViewOffset: CGSize = .zero
-    /// Live background pan delta (view space)
+    // MARK: - Gesture/Live UI State
     @GestureState private var panDragViewOffset: CGSize = .zero
-    /// Live pinch scale (fed by modifier)
     @State private var pinchScale: CGFloat = 1
+    @State private var isDraggingSelection = false  // for chrome hide during drag
 
     var body: some View { canvasPlayground }
 
     var canvasPlayground: some View {
         GeometryReader { geo in
             ZStack {
-                // MARK: - Background Layer
+                // Background
                 Color.white.ignoresSafeArea()
                     .contentShape(Rectangle())
                     .onTapGesture { vm.selection.clear() }
@@ -33,12 +29,11 @@ struct CanvasView: View {
                         vm.selection.ids.isEmpty ? backgroundPanGesture : nil
                     )
 
-                // MARK: - Emoji Layer
+                // Emoji Layer
                 ForEach(emojiGroup) { e in
-                    let showSelectionChrome = vm.isSelected(e.id)
+                    let isSelected = vm.isSelected(e.id)
                     let isInteracting =
-                        (emojiDragViewOffset != .zero)
-                        || (abs(pinchScale - 1) > 0.001)
+                        isDraggingSelection || (abs(pinchScale - 1) > 0.001)
 
                     let minRenderedSize: CGFloat = 30
                     let docScale =
@@ -47,7 +42,7 @@ struct CanvasView: View {
                         minRenderedSize
                         / max(e.size * max(docScale, 0.001), 0.001)
                     let livePinchForSelection: CGFloat =
-                        (showSelectionChrome && !vm.selection.ids.isEmpty)
+                        (isSelected && !vm.selection.ids.isEmpty)
                         ? max(pinchScale, required) : 1
 
                     Text(e.text)
@@ -57,18 +52,12 @@ struct CanvasView: View {
                         )
                         .font(.system(size: e.size))
                         .selectionChrome(
-                            isSelected: showSelectionChrome,
+                            isSelected: isSelected,
                             isInteracting: isInteracting,
                             cornerRadius: 4,
                             lineWidth: 2
                         )
-                        // Live scale: document or selection branch
                         .scaleEffect(docScale * livePinchForSelection)
-                        // Live drag offset while moving selection
-                        .offset(
-                            showSelectionChrome ? emojiDragViewOffset : .zero
-                        )
-                        .zIndex(showSelectionChrome ? 1 : 0)
                         .position(
                             CanvasGeometry.viewPoint(
                                 fromModel: e.position,
@@ -78,38 +67,30 @@ struct CanvasView: View {
                                 canvasSize: geo.size
                             )
                         )
-                        // Tap to select (no toggle-off on tap when selected)
-                        .onTapGesture {
-                            if !showSelectionChrome {
+                        // Per‑emoji drag (only when selected), with live offset + commit
+                        .draggableIfSelected(
+                            isSelected: isSelected,
+                            modelZoom: vm.ui.zoom,
+                            selectionIDs: { vm.selection.ids },
+                            onMoveSelectionBy: onMoveSelectionBy,
+                            onDraggingChange: { isDragging in
+                                isDraggingSelection = isDragging
+                            }
+                        )
+                        // Tap/double‑tap/context menu (unchanged behavior)
+                        .selectionInteractions(
+                            isSelected: isSelected,
+                            onSelect: {
                                 vm.selection.toggle(e.id)
                                 Haptics.selection()
-                            }
-                        }
-                        // Double-tap to confirm delete
-                        .onTapGesture(count: 2) {
-                            if showSelectionChrome {
-                                vm.ui.showDeleteConfirm = true
-                            }
-                        }
-                        // Drag only when selected
-                        .gesture(showSelectionChrome ? emojiDragGesture : nil)
-                        // Context menu on long-press
-                        .contextMenu {
-                            if showSelectionChrome {
-                                Button(role: .destructive) {
-                                    vm.ui.showDeleteConfirm = true
-                                } label: {
-                                    Label(
-                                        "Delete Selected",
-                                        systemImage: "trash"
-                                    )
-                                }
-                            }
-                        }
+                            },
+                            onRequestDelete: { vm.ui.showDeleteConfirm = true }
+                        )
+                        .zIndex(isSelected ? 1 : 0)
                 }
             }
         }
-        // MARK: - Alert & Feedback
+        // Alert (flags now in vm.ui)
         .alert(
             "Delete selected emoji\(vm.selection.ids.count > 1 ? "s" : "")?",
             isPresented: $vm.ui.showDeleteConfirm
@@ -143,22 +124,7 @@ struct CanvasView: View {
     }
     private var currentZoom: CGFloat { vm.ui.zoom * pinchScale }
 
-    // MARK: - Gestures
-
-    private var emojiDragGesture: some Gesture {
-        DragGesture()
-            .updating($emojiDragViewOffset) { value, state, _ in
-                state = value.translation
-            }
-            .onEnded { value in
-                let modelDelta = CanvasGeometry.modelDelta(
-                    fromViewDelta: value.translation,
-                    zoom: vm.ui.zoom
-                )
-                onMoveSelectionBy(vm.selection.ids, modelDelta)
-            }
-    }
-
+    // MARK: - Gestures (background only; per-emoji drag lives in modifier)
     private var backgroundPanGesture: some Gesture {
         DragGesture()
             .updating($panDragViewOffset) { value, state, _ in
