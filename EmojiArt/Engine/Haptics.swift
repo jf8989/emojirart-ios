@@ -2,6 +2,8 @@
 
 import UIKit
 
+/// Utility for triggering selection and success haptic feedback.
+
 enum Haptics {
     static func selection() {
         if #available(iOS 17, *) {

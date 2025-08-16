@@ -2,6 +2,11 @@
 
 import SwiftUI
 
+/// It adds tap, double-tap, and context menu interactions for selection.
+/// - Single tap: toggles selection.
+/// - Double tap: deletes if selected.
+/// - Context menu: provides a delete option if selected.
+
 public struct SelectionInteractions: ViewModifier {
     let isSelected: Bool
     let onSelect: () -> Void

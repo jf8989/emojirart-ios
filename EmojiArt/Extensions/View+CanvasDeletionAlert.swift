@@ -2,6 +2,8 @@
 
 import SwiftUI
 
+/// It provides a reusable alert modifier for confirming deletion of selected items.
+
 extension View {
     func canvasDeletionAlert(
         title: String,

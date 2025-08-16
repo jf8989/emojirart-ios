@@ -1,6 +1,8 @@
 // ViewModel/PaletteStoreViewModel.swift
 import SwiftUI
 
+/// ObservableObject managing emoji palettes and navigation between them.
+
 final class PaletteStoreViewModel: ObservableObject {
     @Published private(set) var palettes: [Palette]
     @Published private(set) var cursorIndex: Int = 0

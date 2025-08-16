@@ -1,6 +1,8 @@
 // Extensions/Environment+CanvasViewport.swift
 import SwiftUI
 
+/// It defines a custom environment value for pan/zoom and a helper to provide combined viewport state.
+
 struct CanvasViewportEnv {
     let pan: CGSize
     let zoom: CGFloat

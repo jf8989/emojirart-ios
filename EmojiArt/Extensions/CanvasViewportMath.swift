@@ -2,6 +2,8 @@
 
 import CoreGraphics
 
+/// It combines persisted and live pan/zoom values into the effective viewport.
+
 enum CanvasViewportMath {
     static func pan(_ persisted: CGSize, _ live: CGSize) -> CGSize {
         .init(

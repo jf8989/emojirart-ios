@@ -3,6 +3,9 @@
 import SwiftUI
 import UIKit
 
+/// The main canvas view: handles rendering background, images, emojis,
+/// drag & drop, selection, gestures (pan/zoom), and haptics.
+
 struct CanvasView: View {
 
     // MARK: - Inputs (single VM)

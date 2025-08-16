@@ -2,6 +2,9 @@
 
 import SwiftUI
 
+/// It adds a visual outline ("chrome") around selected items.
+/// The outline shows when an item is selected and not being interacted with (e.g., not dragged or pinched).
+
 // MARK: - Adds the selection outline and z-order without changing behavior.
 public struct SelectionChrome: ViewModifier {
     let isSelected: Bool

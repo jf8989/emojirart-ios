@@ -2,6 +2,8 @@
 
 import SwiftUI
 
+/// It provides a reusable modifier that combines pinch-to-zoom and drag-to-pan gestures for the canvas.
+
 extension View {
     func canvasPanZoom(
         vm: EmojiArtViewModel,

@@ -3,6 +3,10 @@
 import SwiftUI
 import UIKit
 
+/// Renders a single image on the canvas. Handles selection,
+/// scaling with pinch gestures, dragging when selected,
+/// and delete interactions.
+
 struct ImageNodeView: View {
     @ObservedObject var vm: EmojiArtViewModel
     let item: CanvasImage

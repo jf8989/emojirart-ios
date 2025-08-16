@@ -2,6 +2,8 @@
 
 import SwiftUI
 
+/// Main container view. Hosts the canvas and palette chooser with toolbar actions.
+
 struct EmojiArtMainView: View {
     @StateObject private var viewModel = EmojiArtViewModel()
     @StateObject private var paletteStore = PaletteStoreViewModel()

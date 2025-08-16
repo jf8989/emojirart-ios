@@ -2,6 +2,8 @@
 
 import SwiftUI
 
+/// It provides a reusable modifier to handle drop targets for images and URLs on the canvas.
+
 extension View {
     func canvasDrops(
         vm: EmojiArtViewModel,

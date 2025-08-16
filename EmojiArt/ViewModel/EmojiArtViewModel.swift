@@ -3,6 +3,8 @@
 import SwiftUI
 import UIKit
 
+/// ObservableObject managing domain (canvas), UI state, and selection.
+
 final class EmojiArtViewModel: ObservableObject {
     // MARK: - Domain
     @Published private(set) var canvas = EmojiArtCanvas()

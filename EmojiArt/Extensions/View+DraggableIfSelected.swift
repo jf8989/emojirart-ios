@@ -2,6 +2,9 @@
 
 import SwiftUI
 
+/// It provides a reusable modifier that enables drag gestures only when an item is selected.
+/// The drag is shared across all selected items, applying the live offset and committing the move on release.
+
 public struct DraggableIfSelected: ViewModifier {
     let isSelected: Bool
     let modelZoom: CGFloat

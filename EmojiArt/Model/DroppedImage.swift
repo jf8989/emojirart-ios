@@ -4,6 +4,9 @@ import Foundation
 import SwiftUI
 import UniformTypeIdentifiers
 
+/// Represents an image dropped onto the canvas (drag & drop).
+/// Supports importing image data (PNG/JPEG/HEIC, etc.) via Transferable API.
+
 struct DroppedImage: Transferable {
     enum Source { case data(Data) }
     let source: Source

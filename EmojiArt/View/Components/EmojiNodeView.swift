@@ -1,6 +1,10 @@
 // View/Components/EmojiNodeView.swift
 import SwiftUI
 
+/// Renders a single emoji on the canvas. Handles selection,
+/// scaling with pinch gestures, dragging when selected,
+/// and delete interactions.
+
 struct EmojiNodeView: View {
     @ObservedObject var vm: EmojiArtViewModel
     let emoji: Emoji

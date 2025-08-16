@@ -2,6 +2,9 @@
 
 import SwiftUI
 
+/// Horizontal palette selector with emoji previews.
+/// Lets user cycle palettes, pick an emoji, add/delete palettes.
+
 struct PaletteChooser: View {
     @EnvironmentObject var store: PaletteStoreViewModel
     let onPick: (String) -> Void
