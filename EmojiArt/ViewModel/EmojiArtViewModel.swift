@@ -1,6 +1,7 @@
 // ViewModel/EmojiArtViewModel.swift
 
 import SwiftUI
+import UIKit
 
 final class EmojiArtViewModel: ObservableObject {
     // MARK: - Domain
@@ -45,8 +46,7 @@ final class EmojiArtViewModel: ObservableObject {
             canvas.emojiGroup[i].position.x += modelDelta.width
             canvas.emojiGroup[i].position.y += modelDelta.height
         }
-        for i in canvas.images.indices where ids.contains(canvas.images[i].id)
-        {
+        for i in canvas.images.indices where ids.contains(canvas.images[i].id) {
             canvas.images[i].position.x += modelDelta.width
             canvas.images[i].position.y += modelDelta.height
         }
@@ -58,8 +58,7 @@ final class EmojiArtViewModel: ObservableObject {
             canvas.emojiGroup[i].size = (canvas.emojiGroup[i].size * factor)
                 .clamped(to: 30...512)
         }
-        for i in canvas.images.indices where ids.contains(canvas.images[i].id)
-        {
+        for i in canvas.images.indices where ids.contains(canvas.images[i].id) {
             canvas.images[i].size = (canvas.images[i].size * factor).clamped(
                 to: 40...2048
             )
@@ -79,7 +78,8 @@ final class EmojiArtViewModel: ObservableObject {
     }
 
     func isAcceptableImage(_ data: Data, maxMB: Double = 8) -> Bool {
-        Double(data.count) / (1024 * 1024) <= maxMB
+        guard Double(data.count) / (1024 * 1024) <= maxMB else { return false }
+        return UIImage(data: data) != nil
     }
 
     // MARK: - Reset

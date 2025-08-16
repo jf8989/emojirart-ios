@@ -64,6 +64,8 @@ struct ImageNodeView: View {
                     },
                     onRequestDelete: onRequestDelete
                 )
+                .animation(nil, value: isInteracting)  // prevent jitter mid-gesture
+                .animation(nil, value: selectionDragOffset)  // smooth multi-select drag
                 .zIndex(
                     isSelected
                         ? CanvasZ.imagesBase + CanvasZ.imagesSelectedBump

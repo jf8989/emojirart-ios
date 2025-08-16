@@ -14,7 +14,7 @@ struct CanvasView: View {
 
     // MARK: - Gesture/Live UI State
     @GestureState private var panDragViewOffset: CGSize = .zero  // in-flight doc pan
-    @State private var pinchScale: CGFloat = 1  // in-flight pinch
+    @GestureState private var pinchScale: CGFloat = 1  // in-flight pinch
     @State private var selectionDragOffset: CGSize = .zero  // shared live offset for multi-select drag
 
     // MARK: - Viewport (combined pan/zoom injected for children)
@@ -29,11 +29,8 @@ struct CanvasView: View {
                 Color.primary.ignoresSafeArea()
                     .contentShape(Rectangle())
                     .onTapGesture { vm.selection.clear() }
-                    .gesture(
-                        vm.selection.ids.isEmpty ? backgroundPanGesture : nil
-                    )
 
-                // MARK: - Images Layer (renders dropped images behind emojis)
+                // MARK: - Images Layer
                 ForEach(vm.canvas.images) { img in
                     ImageNodeView(
                         vm: vm,
@@ -59,7 +56,7 @@ struct CanvasView: View {
                     )
                 }
             }
-            // MARK: - Modern Drop Target (Transferable, raw image bytes)
+            // Modern Drop Targets
             .dropDestination(for: DroppedImage.self) { items, location in
                 let modelPoint = CanvasGeometry.modelPoint(
                     fromView: location,
@@ -69,7 +66,6 @@ struct CanvasView: View {
                 )
                 let initialSize: CGFloat = (120 / max(viewport.zoom, 0.001))
                     .clamped(to: 40...512)
-
                 for item in items {
                     if case .data(let data) = item.source,
                         vm.isAcceptableImage(data)
@@ -83,7 +79,6 @@ struct CanvasView: View {
                 }
                 return true
             }
-            // MARK: - URLs (web links AND file URLs from Files/Mac)
             .dropDestination(for: URL.self) { urls, location in
                 let modelPoint = CanvasGeometry.modelPoint(
                     fromView: location,
@@ -93,7 +88,6 @@ struct CanvasView: View {
                 )
                 let initialSize: CGFloat = (120 / max(viewport.zoom, 0.001))
                     .clamped(to: 40...512)
-
                 for url in urls {
                     if url.isFileURL {
                         if let data = try? Data(contentsOf: url),
@@ -119,18 +113,18 @@ struct CanvasView: View {
                                         )
                                     }
                                 }
-                            } catch {
-                                // ignore non-image or network errors for this sprint
-                            }
+                            } catch { /* ignore */  }
                         }
                     }
                 }
                 return true
             }
+            // Combined pan + zoom at the canvas root
+            .simultaneousGesture(combinedPanZoom)
         }
-        // MARK: - Alert & Feedback
+        // Alert & Feedback
         .alert(
-            "Delete selected emoji\(vm.selection.ids.count > 1 ? "s" : "")?",
+            "Delete selected item\(vm.selection.ids.count > 1 ? "s" : "")?",
             isPresented: $vm.ui.showDeleteConfirm
         ) {
             Button("Delete", role: .destructive) {
@@ -145,13 +139,7 @@ struct CanvasView: View {
             selectionTrigger: vm.selection.ids.count,
             deleteTrigger: vm.ui.didDelete
         )
-        // Pinch handling (doc zoom or selection scale)
-        .canvasGestures(
-            vm: vm,
-            livePinchScale: $pinchScale,
-            onScaleSelectionBy: onScaleSelectionBy
-        )
-        // Provide combined pan/zoom to children via Environment
+        // Provide combined pan/zoom to children via Environment (uses live states above)
         .provideCanvasViewport(
             persistedPan: vm.ui.pan,
             livePan: panDragViewOffset,
@@ -160,15 +148,34 @@ struct CanvasView: View {
         )
     }
 
-    // MARK: - Gestures
-    private var backgroundPanGesture: some Gesture {
-        DragGesture()
+    // MARK: - Combined Gestures (Pan ⨉ Zoom)
+    private var combinedPanZoom: some Gesture {
+        let magnify = MagnificationGesture()
+            .updating($pinchScale) { value, state, _ in
+                state = value
+            }
+            .onEnded { final in
+                if vm.selection.ids.isEmpty {
+                    vm.ui.zoom = min(max(vm.ui.zoom * final, 0.25), 8.0)
+                } else {
+                    onScaleSelectionBy(vm.selection.ids, final)
+                }
+            }
+
+        let pan = DragGesture()
             .updating($panDragViewOffset) { value, state, _ in
-                state = value.translation
+                // Only pan the document when NOT dragging a selection
+                if vm.selection.ids.isEmpty && selectionDragOffset == .zero {
+                    state = value.translation
+                }
             }
             .onEnded { value in
-                vm.ui.pan.width += value.translation.width
-                vm.ui.pan.height += value.translation.height
+                if vm.selection.ids.isEmpty && selectionDragOffset == .zero {
+                    vm.ui.pan.width += value.translation.width
+                    vm.ui.pan.height += value.translation.height
+                }
             }
+
+        return magnify.simultaneously(with: pan)
     }
 }

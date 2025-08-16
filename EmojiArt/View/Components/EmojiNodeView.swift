@@ -62,6 +62,8 @@ struct EmojiNodeView: View {
                 },
                 onRequestDelete: onRequestDelete
             )
+            .animation(nil, value: isInteracting)  // disable while pinching/dragging
+            .animation(nil, value: selectionDragOffset)  // and during live group-drag
             .zIndex(
                 isSelected
                     ? CanvasZ.emojisBase + CanvasZ.emojisSelectedBump
