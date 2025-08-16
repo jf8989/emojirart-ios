@@ -14,8 +14,9 @@ struct CanvasView: View {
 
     // MARK: - Gesture/Live UI State
     @GestureState private var panDragViewOffset: CGSize = .zero  // in-flight doc pan
-    @GestureState private var pinchScale: CGFloat = 1  // in-flight pinch
+    @State private var pinchScale: CGFloat = 1  // in-flight pinch
     @State private var selectionDragOffset: CGSize = .zero  // shared live offset for multi-select drag
+    @State private var isPinching: Bool = false
 
     // MARK: - Viewport (combined pan/zoom injected for children)
     @Environment(\.canvasViewport) private var viewport
@@ -35,7 +36,7 @@ struct CanvasView: View {
                     ImageNodeView(
                         vm: vm,
                         item: img,
-                        pinchScale: pinchScale,
+                        pinchScale: $pinchScale,
                         canvasSize: geo.size,
                         selectionDragOffset: $selectionDragOffset,
                         onMoveSelectionBy: onMoveSelectionBy,
@@ -48,7 +49,7 @@ struct CanvasView: View {
                     EmojiNodeView(
                         vm: vm,
                         emoji: e,
-                        pinchScale: pinchScale,
+                        pinchScale: $pinchScale,
                         canvasSize: geo.size,
                         selectionDragOffset: $selectionDragOffset,
                         onMoveSelectionBy: onMoveSelectionBy,
@@ -64,6 +65,7 @@ struct CanvasView: View {
                 vm: vm,
                 selectionDragOffset: $selectionDragOffset,
                 pinchScale: $pinchScale,
+                isPinching: $isPinching,
                 panDragViewOffset: $panDragViewOffset,
                 onScaleSelectionBy: onScaleSelectionBy
             )

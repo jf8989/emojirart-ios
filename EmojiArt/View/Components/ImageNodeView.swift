@@ -6,7 +6,7 @@ import UIKit
 struct ImageNodeView: View {
     @ObservedObject var vm: EmojiArtViewModel
     let item: CanvasImage
-    let pinchScale: CGFloat
+    @Binding var pinchScale: CGFloat
     let canvasSize: CGSize
     @Binding var selectionDragOffset: CGSize
     let onMoveSelectionBy: (_ ids: Set<UUID>, _ modelDelta: CGSize) -> Void

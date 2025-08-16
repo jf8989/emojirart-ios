@@ -4,7 +4,7 @@ import SwiftUI
 struct EmojiNodeView: View {
     @ObservedObject var vm: EmojiArtViewModel
     let emoji: Emoji
-    let pinchScale: CGFloat
+    @Binding var pinchScale: CGFloat
     let canvasSize: CGSize
     @Binding var selectionDragOffset: CGSize
     let onMoveSelectionBy: (_ ids: Set<UUID>, _ modelDelta: CGSize) -> Void

@@ -6,7 +6,8 @@ extension View {
     func canvasPanZoom(
         vm: EmojiArtViewModel,
         selectionDragOffset: Binding<CGSize>,
-        pinchScale: GestureState<CGFloat>,
+        pinchScale: Binding<CGFloat>,
+        isPinching: Binding<Bool>,
         panDragViewOffset: GestureState<CGSize>,
         onScaleSelectionBy: @escaping (_ ids: Set<UUID>, _ factor: CGFloat) ->
             Void
@@ -14,14 +15,20 @@ extension View {
 
         // Magnify (pinch)
         let magnify = MagnificationGesture()
-            .updating(pinchScale) { value, state, _ in
-                state = value
+            .onChanged { value in
+                isPinching.wrappedValue = true
+                pinchScale.wrappedValue = value
             }
             .onEnded { final in
                 if vm.selection.ids.isEmpty {
                     vm.ui.zoom = min(max(vm.ui.zoom * final, 0.25), 8.0)
                 } else {
                     onScaleSelectionBy(vm.selection.ids, final)
+                }
+                // Defer reset to next runloop to avoid stale gesture state
+                DispatchQueue.main.async {
+                    pinchScale.wrappedValue = 1
+                    isPinching.wrappedValue = false
                 }
             }
 
