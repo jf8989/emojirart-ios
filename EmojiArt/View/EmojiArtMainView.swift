@@ -4,6 +4,7 @@ import SwiftUI
 
 struct EmojiArtMainView: View {
     @StateObject private var viewModel = EmojiArtViewModel()
+    @StateObject private var paletteStore = PaletteStoreViewModel()
 
     var body: some View {
         NavigationStack {
@@ -20,7 +21,7 @@ struct EmojiArtMainView: View {
                     onRemoveSelection: { ids in viewModel.remove(ids) }
                 )
                 Divider()
-                paletteView
+                paletteChooser
             }
             .navigationTitle("EmojiArt")
             .toolbar {
@@ -36,11 +37,12 @@ struct EmojiArtMainView: View {
                 }
             }
         }
+        .environmentObject(paletteStore)
     }
 
     // MARK: - Sub.Views
-    var paletteView: some View {
-        PaletteView { pickedEmoji in
+    private var paletteChooser: some View {
+        PaletteChooser { pickedEmoji in
             viewModel.addEmoji(pickedEmoji, at: .zero)
         }
     }
