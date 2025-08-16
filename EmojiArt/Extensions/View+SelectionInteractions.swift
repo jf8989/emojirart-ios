@@ -9,9 +9,7 @@ public struct SelectionInteractions: ViewModifier {
 
     public func body(content: Content) -> some View {
         content
-            .onTapGesture {
-                if !isSelected { onSelect() }
-            }
+            .onTapGesture { onSelect() }
             .onTapGesture(count: 2) {
                 if isSelected { onRequestDelete() }
             }
