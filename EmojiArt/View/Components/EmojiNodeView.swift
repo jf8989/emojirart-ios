@@ -62,6 +62,10 @@ struct EmojiNodeView: View {
                 },
                 onRequestDelete: onRequestDelete
             )
-            .zIndex(isSelected ? 1 : 0)
+            .zIndex(
+                isSelected
+                    ? CanvasZ.emojisBase + CanvasZ.emojisSelectedBump
+                    : CanvasZ.emojisBase
+            )
     }
 }

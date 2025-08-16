@@ -64,7 +64,11 @@ struct ImageNodeView: View {
                     },
                     onRequestDelete: onRequestDelete
                 )
-                .zIndex(isSelected ? 1 : 0)
+                .zIndex(
+                    isSelected
+                        ? CanvasZ.imagesBase + CanvasZ.imagesSelectedBump
+                        : CanvasZ.imagesBase
+                )
         }
     }
 }

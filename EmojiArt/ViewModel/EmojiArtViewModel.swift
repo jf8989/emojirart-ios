@@ -85,5 +85,6 @@ final class EmojiArtViewModel: ObservableObject {
     // MARK: - Reset
     func resetCanvas() {
         canvas.emojiGroup.removeAll()
+        canvas.images.removeAll()
     }
 }
