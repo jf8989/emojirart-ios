@@ -32,21 +32,21 @@ final class EmojiArtViewModel: ObservableObject {
 
     // MARK: - Intent Methods (domain only)
     func addEmoji(_ text: String, at modelPoint: CGPoint, size: CGFloat = 40) {
-        elementsOnCanvas.emojiGroup.append(
+        elementsOnCanvas.emojisOnCanvas.append(
             .init(id: UUID(), text: text, position: modelPoint, size: size)
         )
     }
 
     func remove(_ ids: Set<UUID>) {
-        elementsOnCanvas.emojiGroup.removeAll { ids.contains($0.id) }
+        elementsOnCanvas.emojisOnCanvas.removeAll { ids.contains($0.id) }
         elementsOnCanvas.images.removeAll { ids.contains($0.id) }
     }
 
     func move(_ ids: Set<UUID>, by modelDelta: CGSize) {
-        for i in elementsOnCanvas.emojiGroup.indices
-        where ids.contains(elementsOnCanvas.emojiGroup[i].id) {
-            elementsOnCanvas.emojiGroup[i].position.x += modelDelta.width
-            elementsOnCanvas.emojiGroup[i].position.y += modelDelta.height
+        for i in elementsOnCanvas.emojisOnCanvas.indices
+        where ids.contains(elementsOnCanvas.emojisOnCanvas[i].id) {
+            elementsOnCanvas.emojisOnCanvas[i].position.x += modelDelta.width
+            elementsOnCanvas.emojisOnCanvas[i].position.y += modelDelta.height
         }
         for i in elementsOnCanvas.images.indices where ids.contains(elementsOnCanvas.images[i].id) {
             elementsOnCanvas.images[i].position.x += modelDelta.width
@@ -55,9 +55,9 @@ final class EmojiArtViewModel: ObservableObject {
     }
 
     func scale(_ ids: Set<UUID>, by factor: CGFloat) {
-        for i in elementsOnCanvas.emojiGroup.indices
-        where ids.contains(elementsOnCanvas.emojiGroup[i].id) {
-            elementsOnCanvas.emojiGroup[i].size = (elementsOnCanvas.emojiGroup[i].size * factor)
+        for i in elementsOnCanvas.emojisOnCanvas.indices
+        where ids.contains(elementsOnCanvas.emojisOnCanvas[i].id) {
+            elementsOnCanvas.emojisOnCanvas[i].size = (elementsOnCanvas.emojisOnCanvas[i].size * factor)
                 .clamped(to: 30...512)
         }
         for i in elementsOnCanvas.images.indices where ids.contains(elementsOnCanvas.images[i].id) {
@@ -86,7 +86,7 @@ final class EmojiArtViewModel: ObservableObject {
 
     // MARK: - Reset
     func resetCanvas() {
-        elementsOnCanvas.emojiGroup.removeAll()
+        elementsOnCanvas.emojisOnCanvas.removeAll()
         elementsOnCanvas.images.removeAll()
     }
 }

@@ -6,6 +6,6 @@ import Foundation
 /// currently placed on the canvas.
 
 struct EmojisAndImagesOnCanvas {
-    var emojiGroup: [Emoji] = []
+    var emojisOnCanvas: [Emoji] = []
     var images: [CanvasImage] = []
 }

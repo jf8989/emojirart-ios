@@ -59,7 +59,7 @@ struct CanvasView: View {
                         onRequestDelete: { vm.ui.showDeleteConfirm = true }
                     )
                 }
-
+                
             }
             // Drops (images / URLs)
             .canvasDrops(vm: vm, canvasSize: geo.size, viewport: viewport)
