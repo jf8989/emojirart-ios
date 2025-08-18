@@ -5,22 +5,22 @@ import SwiftUI
 /// Main container view. Hosts the canvas and palette chooser with toolbar actions.
 
 struct EmojiArtMainView: View {
-    @StateObject private var viewModel = EmojiArtViewModel()
+    @StateObject private var vm = EmojiArtViewModel()
     @StateObject private var paletteStore = PaletteStoreViewModel()
 
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
                 CanvasView(
-                    vm: viewModel,
-                    emojiGroup: viewModel.elementsOnCanvas.emojisOnCanvas,
+                    vm: vm,
+                    emojiGroup: vm.elementsOnCanvas.emojisOnCanvas,
                     onMoveSelectionBy: { ids, delta in
-                        viewModel.move(ids, by: delta)
+                        vm.move(ids, by: delta)
                     },
                     onScaleSelectionBy: { ids, factor in
-                        viewModel.scale(ids, by: factor)
+                        vm.scale(ids, by: factor)
                     },
-                    onRemoveSelection: { ids in viewModel.remove(ids) }
+                    onRemoveSelection: { ids in vm.remove(ids) }
                 )
                 Divider()
                 paletteChooser
@@ -30,11 +30,11 @@ struct EmojiArtMainView: View {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button("Reset View") {
                         withAnimation(.easeInOut(duration: 0.2)) {
-                            viewModel.ui.pan = .zero
-                            viewModel.ui.zoom = 1
+                            vm.ui.pan = .zero
+                            vm.ui.zoom = 1
                         }
-                        viewModel.selection.clear()
-                        viewModel.resetCanvas()
+                        vm.selection.clear()
+                        vm.resetCanvas()
                     }
                 }
             }
@@ -45,7 +45,7 @@ struct EmojiArtMainView: View {
     // MARK: - Sub.Views
     private var paletteChooser: some View {
         PaletteChooser { pickedEmoji in
-            viewModel.addEmoji(pickedEmoji, at: .zero)
+            vm.addEmoji(pickedEmoji, at: .zero)
         }
     }
 }
