@@ -34,6 +34,19 @@ struct CanvasView: View {
                     .contentShape(Rectangle())
                     .onTapGesture { vm.selection.clear() }
 
+                // MARK: - Emoji Layer
+                ForEach(emojiGroup) { e in
+                    EmojiNodeView(
+                        vm: vm,
+                        emoji: e,
+                        pinchScale: $pinchScale,
+                        canvasSize: geo.size,
+                        selectionDragOffset: $selectionDragOffset,
+                        onMoveSelectionBy: onMoveSelectionBy,
+                        onRequestDelete: { vm.ui.showDeleteConfirm = true }
+                    )
+                }
+
                 // MARK: - Images Layer
                 ForEach(vm.elementsOnCanvas.images) { img in
                     ImageNodeView(
@@ -47,18 +60,6 @@ struct CanvasView: View {
                     )
                 }
 
-                // MARK: - Emoji Layer
-                ForEach(emojiGroup) { e in
-                    EmojiNodeView(
-                        vm: vm,
-                        emoji: e,
-                        pinchScale: $pinchScale,
-                        canvasSize: geo.size,
-                        selectionDragOffset: $selectionDragOffset,
-                        onMoveSelectionBy: onMoveSelectionBy,
-                        onRequestDelete: { vm.ui.showDeleteConfirm = true }
-                    )
-                }
             }
             // Drops (images / URLs)
             .canvasDrops(vm: vm, canvasSize: geo.size, viewport: viewport)
