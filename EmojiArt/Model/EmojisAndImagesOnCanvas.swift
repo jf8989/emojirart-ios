@@ -5,7 +5,7 @@ import Foundation
 /// Represents the canvas model, containing all emojis and images
 /// currently placed on the canvas.
 
-struct EmojiArtCanvas {
+struct EmojisAndImagesOnCanvas {
     var emojiGroup: [Emoji] = []
     var images: [CanvasImage] = []
 }
