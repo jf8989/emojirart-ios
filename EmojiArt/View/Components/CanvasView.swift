@@ -35,7 +35,7 @@ struct CanvasView: View {
                     .onTapGesture { vm.selection.clear() }
 
                 // MARK: - Images Layer
-                ForEach(vm.canvas.images) { img in
+                ForEach(vm.elementsOnCanvas.images) { img in
                     ImageNodeView(
                         vm: vm,
                         item: img,

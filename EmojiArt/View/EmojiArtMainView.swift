@@ -13,7 +13,7 @@ struct EmojiArtMainView: View {
             VStack(spacing: 0) {
                 CanvasView(
                     vm: viewModel,
-                    emojiGroup: viewModel.canvas.emojiGroup,
+                    emojiGroup: viewModel.elementsOnCanvas.emojiGroup,
                     onMoveSelectionBy: { ids, delta in
                         viewModel.move(ids, by: delta)
                     },
