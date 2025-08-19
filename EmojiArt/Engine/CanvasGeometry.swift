@@ -2,6 +2,8 @@
 
 import CoreGraphics
 
+/// Utility for converting between model-space and view-space coordinates.
+
 enum CanvasGeometry {
     /// view <-> model transforms given current pan/zoom
     static func viewPoint(

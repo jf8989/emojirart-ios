@@ -2,36 +2,50 @@
 
 import SwiftUI
 
+/// Main container view. Hosts the canvas and palette chooser with toolbar actions.
+
 struct EmojiArtMainView: View {
-    @StateObject private var viewModel = EmojiArtViewModel()
+    @StateObject private var vm = EmojiArtViewModel()
+    @StateObject private var paletteStore = PaletteStoreViewModel()
 
     var body: some View {
-        VStack(spacing: 0) {
-            GeometryReader { geo in
-                ZStack {
-                    Color.white.ignoresSafeArea()
-                    ForEach(viewModel.canvas.emojis) { e in
-                        Text(e.text).font(.system(size: e.size))
-                            .position(
-                                CanvasGeometry
-                                    .viewPoint(
-                                        fromModel: e.position,
-                                        pan: .zero,
-                                        zoom: 1,
-                                        canvasSize: geo.size
-                                    )
-                            )
+        NavigationStack {
+            VStack(spacing: 0) {
+                CanvasView(
+                    vm: vm,
+                    emojiGroup: vm.elementsOnCanvas.emojisOnCanvas,
+                    onMoveSelectionBy: { ids, delta in
+                        vm.move(ids, by: delta)
+                    },
+                    onScaleSelectionBy: { ids, factor in
+                        vm.scale(ids, by: factor)
+                    },
+                    onRemoveSelection: { ids in vm.remove(ids) }
+                )
+                Divider()
+                paletteChooser
+            }
+            .navigationTitle("EmojiArt")
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("Reset View") {
+                        withAnimation(.easeInOut(duration: 0.2)) {
+                            vm.ui.pan = .zero
+                            vm.ui.zoom = 1
+                        }
+                        vm.selection.clear()
+                        vm.resetCanvas()
                     }
                 }
             }
-            Divider()
-            PaletteView { picked in
-                viewModel.addEmoji(picked, at: .zero)/// center
-            }
+        }
+        .environmentObject(paletteStore)
+    }
+
+    // MARK: - Sub.Views
+    private var paletteChooser: some View {
+        PaletteChooser { pickedEmoji in
+            vm.addEmoji(pickedEmoji, at: .zero)
         }
     }
-}
-
-#Preview {
-    EmojiArtMainView()
 }

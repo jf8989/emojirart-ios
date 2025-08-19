@@ -1,0 +1,77 @@
+// View/Components/EmojiNodeView.swift
+import SwiftUI
+
+/// Renders a single emoji on the canvas. Handles selection,
+/// scaling with pinch gestures, dragging when selected,
+/// and delete interactions.
+
+struct EmojiNodeView: View {
+    @ObservedObject var vm: EmojiArtViewModel
+    let emoji: Emoji
+    @Binding var pinchScale: CGFloat
+    let canvasSize: CGSize
+    @Binding var selectionDragOffset: CGSize
+    let onMoveSelectionBy: (_ ids: Set<UUID>, _ modelDelta: CGSize) -> Void
+    let onRequestDelete: () -> Void
+
+    @Environment(\.canvasViewport) private var viewport
+    @State private var isDraggingSelection = false
+
+    var body: some View {
+        let isSelected = vm.isSelected(emoji.id)
+        let isInteracting = isDraggingSelection || (abs(pinchScale - 1) > 0.001)
+
+        let minRenderedSize: CGFloat = 30
+        let docScale = vm.selection.ids.isEmpty ? viewport.zoom : vm.ui.zoom
+        let required =
+            minRenderedSize / max(emoji.size * max(docScale, 0.001), 0.001)
+        let livePinchForSelection: CGFloat =
+            (isSelected && !vm.selection.ids.isEmpty)
+            ? max(pinchScale, required) : 1
+
+        Text(emoji.text)
+            .accessibilityLabel(Text(emoji.text))
+            .accessibilityHint(
+                "Tap to select. Drag to move when selected. Double‑tap to delete."
+            )
+            .font(.system(size: emoji.size))
+            .selectionChrome(
+                isSelected: isSelected,
+                isInteracting: isInteracting,
+                cornerRadius: 4,
+                lineWidth: 2
+            )
+            .scaleEffect(docScale * livePinchForSelection)
+            .position(
+                CanvasGeometry.viewPoint(
+                    fromModel: emoji.position,
+                    pan: viewport.pan,
+                    zoom: vm.selection.ids.isEmpty ? viewport.zoom : vm.ui.zoom,
+                    canvasSize: canvasSize
+                )
+            )
+            .draggableIfSelected(
+                isSelected: isSelected,
+                modelZoom: vm.ui.zoom,
+                selectionIDs: { vm.selection.ids },
+                liveSelectionOffset: $selectionDragOffset,
+                onMoveSelectionBy: onMoveSelectionBy,
+                onDraggingChange: { isDraggingSelection = $0 }
+            )
+            .selectionInteractions(
+                isSelected: isSelected,
+                onSelect: {
+                    vm.selection.toggle(emoji.id)
+                    Haptics.selection()
+                },
+                onRequestDelete: onRequestDelete
+            )
+            .animation(nil, value: isInteracting)  // disable while pinching/dragging
+            .animation(nil, value: selectionDragOffset)  // and during live group-drag
+            .zIndex(
+                isSelected
+                    ? CanvasZ.emojisBase + CanvasZ.emojisSelectedBump
+                    : CanvasZ.emojisBase
+            )
+    }
+}
